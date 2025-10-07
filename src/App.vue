@@ -29,6 +29,21 @@
 
     <!-- Message HUD -->
     <div class="hud">{{ message }}</div>
+
+    <!-- Décorations murales -->
+  <img class="deco deco1" :src="deco1" alt="Déco 1" />
+  <img class="deco deco2" :src="deco2" alt="Déco 2" />
+  <img class="deco deco3" :src="deco3" alt="Déco 3" />
+  <img class="deco deco4" :src="deco4" alt="Déco 4" />
+  <img class="deco deco5" :src="deco5" alt="Déco 5" />
+  <img class="deco deco6" :src="deco6" alt="Déco 6" />
+  <img class="deco deco7" :src="deco7" alt="Déco 7" />
+  <img class="deco deco8" :src="deco8" alt="Déco 8" />
+  <img class="deco deco9" :src="deco9" alt="Déco 9" />
+
+  <!-- Armoire -->
+  <img class="armoire armoire" :src="armoire" alt="Armoire" />
+
   </div>
 </template>
 
@@ -40,6 +55,16 @@ import deskImage  from './assets/bureau.png'
 import doorImage  from './assets/porte.png'
 import trashImage from './assets/poubelle.png'
 import frameImage from './assets/photo.png'
+import deco1 from './assets/affiche1.jpg'
+import deco2 from './assets/affiche2.png'
+import deco3 from './assets/affiche3.PNG'
+import deco4 from './assets/affiche4.PNG'
+import deco5 from './assets/affiche5.PNG'
+import deco6 from './assets/affiche6.PNG'
+import deco7 from './assets/affiche7.png'
+import deco8 from './assets/affiche8.png'
+import deco9 from './assets/affiche9.png'
+import armoire from './assets/armoire.png'
 
 // États principaux
 const startScreen = ref(true)
@@ -157,7 +182,7 @@ function validateCode() {
   position: relative;
   width: 100vw;
   height: 100vh;
-  background-color: #f3e7f1;
+  background-color: #f6e6d1;
   overflow: hidden;
 }
 
@@ -169,12 +194,13 @@ function validateCode() {
   transform: translateX(-50%);  
   width: clamp(220px, 34vw, 520px);
   cursor: pointer;
+  z-index: 10;
 }
 
 .door {
   position: absolute;
   bottom: 0; 
-  left: 3vw;     
+  left: 5vw;     
   width: clamp(120px, 18vw, 250px);
   cursor: pointer;
 }
@@ -182,7 +208,7 @@ function validateCode() {
 .trash {
   position: absolute;
   bottom: 0;   
-  left: 50%; 
+  left: 43%; 
   transform: translateX(-100%);
   width: clamp(44px, 5.5vw, 80px);
   cursor: pointer;
@@ -190,9 +216,9 @@ function validateCode() {
 
 .frame {
   position: absolute;
-  left: 10vw;
-  top: 8vh;
-  width: clamp(60px, 10vw, 180px);
+  right: 30vw;
+  top: 40vh;
+  width: clamp(30px, 5vw, 90px);
   cursor: pointer;
 }
 
@@ -285,5 +311,36 @@ function validateCode() {
     width: 40vw;
   }
 }
+
+  /* 🎨 Objets de décoration murale */
+.deco {
+  position: absolute;
+  object-fit: contain;
+  width: clamp(50px, 8vw, 120px);
+  cursor: default;
+  user-select: none;
+  pointer-events: none; /* pour ne pas gêner les clics sur d'autres objets */
+}
+
+/* Positionne chaque élément à un endroit différent du mur */
+.deco1 { top: 8vh; left: 30vw; }
+.deco2 { top: 4vh; right: 53vw; }
+.deco3 { top: 22vh; left: 48vw; }
+.deco4 { top: 31vh; right: 35vw; }
+.deco5 { top: 28vh; left: 39vw; }
+.deco6 { top: 6vh; right: 35vw; }
+.deco7 { top: 4vh; right: 44vw; }
+.deco8 { top: 32vh; left: 30vw; }
+.deco9 { top: 14vh; right: 26vw; }
+
+.armoire {
+  position: absolute;
+  bottom: 0;                     
+  left: 88%;                     
+  transform: translateX(-50%);  
+  width: clamp(130px, 21vw, 337px);
+  cursor: default;
+}
+
 
 </style>
