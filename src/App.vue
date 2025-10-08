@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 // Images
 import backgroundRoom  from './assets/fond_chambre.png'
@@ -89,6 +89,7 @@ const showMessage = ref(false)
 const showInput = ref(false)
 const codeInput = ref("")
 let currentObject = ""
+let messageTimer = null
 
 // Codes du jeu
 const computerCode = "1207"
@@ -123,45 +124,59 @@ function inspect(name) {
       openPhoto(frame)
       break
     case 'door':
-      message.value = "La porte est verrouillée. Il faut une clé."
-      showMessage.value = true 
+      flashMessage("La porte est verrouillée. Il faut une clé.")
       break
     case 'closet':
-      message.value = "Cette armoire est verrouillée."
-      showMessage.value = true 
+      flashMessage("Cette armoire est verrouillée.")
       break
   }
 }
 
 // Fonction qui vérifie si le code est bon
-function validateCode() {
+async function validateCode() {
   if (currentObject === 'desk') {
     if (codeInput.value === computerCode) {
-      showMessage.value = false
       openPhoto(macUnlocked)
       showInput.value = false
     } else {
-      showMessage.value = true
-      message.value = "Code incorrect"
+      flashMessage("Code incorrect", 1500)
       showInput.value = true
+      await nextTick()
+      codeField.value?.focus()
     }
-    
   }
 
   if (currentObject === 'drawer') {
     if (codeInput.value === drawerCode) {
       openPhoto(drawerOpen)
-      showMessage.value = false
       showInput.value = false
     } else {
-      showMessage.value = true
-      message.value = "Code incorrect"
+      flashMessage("Code incorrect", 1500)
       showInput.value = true
+      await nextTick()
+      codeField.value?.focus()
     }
   }
+
   codeInput.value = ""
 }
 
+function flashMessage(text, ms = 2500) {
+  // Affiche le texte
+  message.value = text
+  showMessage.value = true
+
+  // Reset du timer précédent si besoin
+  if (messageTimer) clearTimeout(messageTimer)
+
+  // Cache après ms
+  messageTimer = setTimeout(() => {
+    showMessage.value = false
+    messageTimer = null
+  }, ms)
+}
+
+onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
 
 </script>
 
