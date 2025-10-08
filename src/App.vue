@@ -20,20 +20,20 @@
     <button class="hotspot desk" @click="inspect('desk')" aria-label="Bureau"></button>
     <button class="hotspot closet" @click="inspect('closet')" aria-label="Armoire"></button>
     <button class="hotspot frame" @click="inspect('frame')" aria-label="Photo"></button>
-
-    <!-- Champ de code -->
-    <div v-if="showInput" class="input-box">
-      <input v-model="codeInput" placeholder="Déverrouiller" @keyup.enter="validateCode" />
-      <button @click="validateCode">OK</button>
-    </div>
-
-    <!-- Message HUD -->
-    <div v-if="showMessage" class="hud">{{ message }}</div>
-
   </div>
 
-  <!-- Affichage des différentes images -->
-   <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
+  <!-- Images affichées pour les différents objets -->
+  <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
+  
+  <!-- Message -->
+  <div v-if="showMessage" class="hud">{{ message }}</div>
+
+  <!-- Champ de code -->
+  <form v-if="showInput" class="input-box" @submit.prevent="validateCode">
+    <input v-model="codeInput" placeholder="Mot de passe" inputmode="numeric"
+    pattern="\d*" maxlength="4" ref="codeField" required/>
+  </form>
+  
 
   <!-- Bouton retour -->
   <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
@@ -48,6 +48,9 @@ import backgroundRoom  from './assets/fond_chambre.png'
 import frame from './assets/photo.png'
 import drawer2 from './assets/tiroir1.png'
 import drawer from './assets/tiroir.png'
+import macLocked from './assets/mac.png'
+import macUnlocked from './assets/macunlocked.png'
+import drawerOpen from './assets/tiroirOuvert.png'
 
 const showPhoto = ref(false)
 const currentImage = ref(null)
@@ -55,7 +58,6 @@ const currentImage = ref(null)
 function openPhoto(image) {
   currentImage.value = image
   showPhoto.value = true
-  showInput.value = false
   showMessage.value = false
 }
 
@@ -71,6 +73,13 @@ function onKeydown(e) {
 }
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
+// Gère le focus automatique sur l’input
+async function showCodeBox() {
+  showInput.value = true
+  await nextTick()
+  codeField.value?.focus()
+}
 
 
 // États principaux
@@ -88,7 +97,6 @@ const drawerCode   = "8421"
 // Fonction qui démarre le jeu
 function startGame() {
   startScreen.value = false
-  message.value = "Tu es enfermé·e dans la chambre. Observe bien les objets autour de toi."
 }
 
 // Fonction qui affiche les différents phases en fonction des objets 
@@ -100,10 +108,13 @@ function inspect(name) {
   switch (name) {
     case 'desk':
       showInput.value = true
+      openPhoto(macLocked)
+      showCodeBox()
       break
     case 'drawer':
       openPhoto(drawer)
-      // showInput.value = true
+      showCodeBox()
+      showInput.value = true
       break
     case 'drawer1':
       openPhoto(drawer2)
@@ -125,20 +136,33 @@ function inspect(name) {
 // Fonction qui vérifie si le code est bon
 function validateCode() {
   if (currentObject === 'desk') {
-    message.value = (codeInput.value === computerCode)
-      ? "💻 Ordinateur déverrouillé : « Mot de passe tiroir : 8421 »."
-      : "Code incorrect pour l’ordinateur."
+    if (codeInput.value === computerCode) {
+      showMessage.value = false
+      openPhoto(macUnlocked)
+      showInput.value = false
+    } else {
+      showMessage.value = true
+      message.value = "Code incorrect"
+      showInput.value = true
+    }
+    
   }
 
   if (currentObject === 'drawer') {
-    message.value = (codeInput.value === drawerCode)
-      ? "🗄️ Le tiroir s’ouvre ! À l’intérieur, tu trouves une clé brillante."
-      : "Code incorrect pour le tiroir."
+    if (codeInput.value === drawerCode) {
+      openPhoto(drawerOpen)
+      showMessage.value = false
+      showInput.value = false
+    } else {
+      showMessage.value = true
+      message.value = "Code incorrect"
+      showInput.value = true
+    }
   }
-
   codeInput.value = ""
-  showInput.value = false
 }
+
+
 </script>
 
 <style scoped>
@@ -301,13 +325,13 @@ function validateCode() {
   outline: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-/* Message HUD */  /* A voir pour améliorer */
+/* Message */
 .hud {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: 2.5vh;
+  bottom: 4vh;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   padding: 1vh 2vw;
   border-radius: 10px;
   color: #e9eef8;
@@ -317,32 +341,33 @@ function validateCode() {
   text-align: center;
   width: 90vw;
   max-width: 700px;
+  z-index: 950; /* au-dessus de l'image */
 }
 
 /* Zone de saisie du code */ /* A voir pour améliorer */
 .input-box {
-  position: absolute;
+  position: fixed;
   left: 50%;
-  bottom: 15vh;
+  bottom: 38vh;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.45);
   padding: 10px 12px;
   border-radius: 10px;
   backdrop-filter: blur(2px);
+  z-index: 950;
 }
 
 .input-box input {
-  width: clamp(120px, 20vw, 200px);
-  padding: 8px 10px;
+  width: clamp(160px, 20vw, 120px);
+  padding: 7px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #0d1222;
-  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #5a5a5b;
+  color: #faf9f9;
   text-align: center;
 }
-
+/*
 .input-box button {
   border: none;
   padding: 8px 12px;
@@ -355,7 +380,7 @@ function validateCode() {
 .input-box button:hover {
   filter: brightness(1.1);
 }
-
+*/
 /* Responsive */
 @media (max-width: 600px) {
   .hud {
@@ -386,7 +411,7 @@ function validateCode() {
   max-height: 75vh;
   border-radius: 12px;
   /* box-shadow: 0 6px 18px rgba(25, 25, 25, 0.633); */
-  z-index: 998; 
+  z-index: 900; 
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
