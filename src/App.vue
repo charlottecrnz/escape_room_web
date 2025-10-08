@@ -65,6 +65,12 @@ function closePhoto() {
   showPhoto.value = false
   currentImage.value = null
   showMessage.value = false
+
+  showInput.value = false
+  codeInput.value = ""
+  codeField.value?.blur()
+
+  showMessage.value = false
 }
 
 // Optionnel : fermer avec Échap
@@ -90,6 +96,8 @@ const showInput = ref(false)
 const codeInput = ref("")
 let currentObject = ""
 let messageTimer = null
+const isComputerUnlocked = ref(false)
+const isDrawerUnlocked = ref(false)
 
 // Codes du jeu
 const computerCode = "1207"
@@ -108,14 +116,22 @@ function inspect(name) {
 
   switch (name) {
     case 'desk':
-      showInput.value = true
-      openPhoto(macLocked)
-      showCodeBox()
+      if (isComputerUnlocked.value) {
+        openPhoto(macUnlocked)
+      } else {
+        showInput.value = true
+        openPhoto(macLocked)
+        showCodeBox()
+      }
       break
     case 'drawer':
-      openPhoto(drawer)
-      showCodeBox()
-      showInput.value = true
+      if (isDrawerUnlocked.value) {
+        openPhoto(drawerOpen)
+      } else {
+        showInput.value = true
+        openPhoto(drawer)
+        showCodeBox()
+      }
       break
     case 'drawer1':
       openPhoto(drawer2)
@@ -136,6 +152,7 @@ function inspect(name) {
 async function validateCode() {
   if (currentObject === 'desk') {
     if (codeInput.value === computerCode) {
+      isComputerUnlocked.value = true
       openPhoto(macUnlocked)
       showInput.value = false
     } else {
@@ -148,6 +165,7 @@ async function validateCode() {
 
   if (currentObject === 'drawer') {
     if (codeInput.value === drawerCode) {
+      isDrawerUnlocked.value = true
       openPhoto(drawerOpen)
       showInput.value = false
     } else {
