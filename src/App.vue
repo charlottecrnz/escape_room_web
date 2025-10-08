@@ -11,15 +11,15 @@
   </div>
 
   <!-- Chambre -->
-  <div v-else class="room-scene">
-    <!-- Objets cliquables -->
-    <img class="desk"  :src="deskImage"  alt="Bureau"   @click="inspect('desk')" />
-    <img class="door"  :src="doorImage"  alt="Porte"    @click="inspect('door')" />
-    <img class="trash" :src="trashImage" alt="Poubelle" @click="inspect('trash')" />
-    <img class="frame" :src="frameImage" alt="Cadre"    @click="inspect('frame')" />
+  <div v-else class="room-scene" :style="{ backgroundImage: `url(${backgroundRoom})` }">
 
-    <!-- Hotspot invisible du tiroir -->
+    <!-- Hotspots invisibles des différents éléments cliquables -->
     <button class="hotspot drawer" @click="inspect('drawer')" aria-label="Tiroir"></button>
+    <button class="hotspot drawer2" @click="inspect('drawer1')" aria-label="Tiroir1"></button>
+    <button class="hotspot door" @click="inspect('door')" aria-label="Porte"></button>
+    <button class="hotspot desk" @click="inspect('desk')" aria-label="Bureau"></button>
+    <button class="hotspot closet" @click="inspect('closet')" aria-label="Armoire"></button>
+    <button class="hotspot frame" @click="inspect('frame')" aria-label="Photo"></button>
 
     <!-- Champ de code -->
     <div v-if="showInput" class="input-box">
@@ -30,41 +30,38 @@
     <!-- Message HUD -->
     <div class="hud">{{ message }}</div>
 
-    <!-- Décorations murales -->
-  <img class="deco deco1" :src="deco1" alt="Déco 1" />
-  <img class="deco deco2" :src="deco2" alt="Déco 2" />
-  <img class="deco deco3" :src="deco3" alt="Déco 3" />
-  <img class="deco deco4" :src="deco4" alt="Déco 4" />
-  <img class="deco deco5" :src="deco5" alt="Déco 5" />
-  <img class="deco deco6" :src="deco6" alt="Déco 6" />
-  <img class="deco deco7" :src="deco7" alt="Déco 7" />
-  <img class="deco deco8" :src="deco8" alt="Déco 8" />
-  <img class="deco deco9" :src="deco9" alt="Déco 9" />
-
-  <!-- Armoire -->
-  <img class="armoire armoire" :src="armoire" alt="Armoire" />
-
   </div>
+
+  <!-- Affichage de la photo-->
+  <img v-if="showPhoto" :src="frame" alt="Photo encadrée" class="photo-full"/>
+  <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
+
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 // Images
-import deskImage  from './assets/bureau.png'
-import doorImage  from './assets/porte.png'
-import trashImage from './assets/poubelle.png'
-import frameImage from './assets/photo.png'
-import deco1 from './assets/affiche1.jpg'
-import deco2 from './assets/affiche2.png'
-import deco3 from './assets/affiche3.PNG'
-import deco4 from './assets/affiche4.PNG'
-import deco5 from './assets/affiche5.PNG'
-import deco6 from './assets/affiche6.PNG'
-import deco7 from './assets/affiche7.png'
-import deco8 from './assets/affiche8.png'
-import deco9 from './assets/affiche9.png'
-import armoire from './assets/armoire.png'
+import backgroundRoom  from './assets/fond_chambre.png'
+import frame from './assets/photo.png'
+
+const showPhoto = ref(false)
+
+function openPhoto() {
+  showPhoto.value = true
+  showInput.value = false
+}
+function closePhoto() { 
+  showPhoto.value = false 
+}
+
+// Optionnel : fermer avec Échap
+function onKeydown(e) {
+  if (e.key === 'Escape' && showPhoto.value) closePhoto()
+}
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
 
 // États principaux
 const startScreen = ref(true)
@@ -101,7 +98,7 @@ function inspect(name) {
       message.value = "Tu regardes dans la poubelle... un papier chiffonné dit : « Le mot de passe est une date importante. »"
       break
     case 'frame':
-      message.value = "Tu observes la photo : une date est inscrite dessous — 12/07/1990."
+      openPhoto()
       break
     case 'door':
       message.value = "La porte est verrouillée. Il te faut une clé."
@@ -174,60 +171,94 @@ function validateCode() {
   overflow: hidden;           
   text-overflow: ellipsis;    
 }
+
+
 /* ---- CHAMBRE ---- */
 :global(body) { margin: 0; }
 
 /* Fond de la scène */
-.room-scene {
-  position: relative;
+.room-scene{
   width: 100vw;
   height: 100vh;
-  background-color: #f6e6d1;
+  background-size: contain;      /* ou 'contain' / 'auto' */
+  background-position: center; /* centre la photo */
+  background-repeat: no-repeat;/* ou 'repeat' si papier peint */
   overflow: hidden;
 }
 
-/* Position des différents objets */
-.desk {
-  position: absolute;
-  bottom: 0;                     
-  left: 50%;                     
-  transform: translateX(-50%);  
-  width: clamp(220px, 34vw, 520px);
-  cursor: pointer;
-  z-index: 10;
-}
 
-.door {
+
+/* Armoire */
+.hotspot.closet {
   position: absolute;
-  bottom: 0; 
-  left: 5vw;     
-  width: clamp(120px, 18vw, 250px);
+  left: 86%;
+  bottom: 0vh;
+  width: clamp(270px, 14vw, 200px);
+  height: clamp(580px, 7vh, 100px);
+  transform: translateX(-50%);
+  background: transparent; /*transparent*/
+  border: none;
   cursor: pointer;
 }
-
-.trash {
-  position: absolute;
-  bottom: 0;   
-  left: 43%; 
-  transform: translateX(-100%);
-  width: clamp(44px, 5.5vw, 80px);
-  cursor: pointer;
+.hotspot.closet:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-.frame {
+/* Ordinateur sur le bureau */
+.hotspot.desk {
   position: absolute;
-  right: 30vw;
-  top: 40vh;
-  width: clamp(30px, 5vw, 90px);
+  left: 56%;
+  bottom: 32vh;
+  width: clamp(90px, 14vw, 200px);
+  height: clamp(124px, 7vh, 100px);
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
   cursor: pointer;
 }
+.hotspot.desk:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+}
 
-/* Tiroir */  /* Dupliquer et modifier pour les deux autres tiroirs */
+/* Porte */
+.hotspot.door {
+  position: absolute;
+  right: 58%;
+  bottom: 1vh;
+  width: clamp(100px, 14vw, 200px);
+  height: clamp(630px, 7vh, 100px);
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.hotspot.door:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+
+/* Cadre photo */
+.hotspot.frame {
+  position: absolute;
+  left: 71.8%;
+  bottom: 50vh;
+  width: clamp(45px, 14vw, 45px);
+  height: clamp(60px, 7vh, 100px);
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.hotspot.frame:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Tiroir 1 */  /* Dupliquer et modifier pour les deux autres tiroirs */
 .hotspot.drawer {
   position: absolute;
-  left: 50%;
-  bottom: 12vh;
-  width: clamp(100px, 14vw, 200px);
+  left: 67%;
+  bottom: 18.4vh;
+  width: clamp(110px, 14vw, 50px);
   height: clamp(40px, 7vh, 100px);
   transform: translateX(-50%);
   background: transparent;
@@ -235,6 +266,22 @@ function validateCode() {
   cursor: pointer;
 }
 .hotspot.drawer:hover {
+  outline: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+/* Tiroir 2 */
+.hotspot.drawer2 {
+  position: absolute;
+  left: 45.2%;
+  bottom: 18.4vh;
+  width: clamp(108px, 14vw, 50px);
+  height: clamp(40px, 7vh, 100px);
+  transform: translateX(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.hotspot.drawer2:hover {
   outline: 2px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -312,34 +359,54 @@ function validateCode() {
   }
 }
 
-  /* 🎨 Objets de décoration murale */
-.deco {
-  position: absolute;
-  object-fit: contain;
-  width: clamp(50px, 8vw, 120px);
-  cursor: default;
-  user-select: none;
-  pointer-events: none; /* pour ne pas gêner les clics sur d'autres objets */
+
+/* Image affichée par-dessus la scène */
+.photo-full {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(70vw, 900px);
+  max-height: 75vh;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  z-index: 998; /* au-dessus de la scène mais sous le bouton */
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Positionne chaque élément à un endroit différent du mur */
-.deco1 { top: 8vh; left: 30vw; }
-.deco2 { top: 4vh; right: 53vw; }
-.deco3 { top: 22vh; left: 48vw; }
-.deco4 { top: 31vh; right: 35vw; }
-.deco5 { top: 28vh; left: 39vw; }
-.deco6 { top: 6vh; right: 35vw; }
-.deco7 { top: 4vh; right: 44vw; }
-.deco8 { top: 32vh; left: 30vw; }
-.deco9 { top: 14vh; right: 26vw; }
+/* Bouton "Retour" en haut à droite */
+.back-btn-top {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  background: #686869;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.back-btn-top:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
 
-.armoire {
-  position: absolute;
-  bottom: 0;                     
-  left: 88%;                     
-  transform: translateX(-50%);  
-  width: clamp(130px, 21vw, 337px);
-  cursor: default;
+/* Mobile : passer en colonne */
+@media (max-width: 680px) {
+  .lightbox-content {
+    flex-direction: column;
+  }
+  .lightbox-img {
+    max-width: 86vw;
+    max-height: 60vh;
+  }
+  .back-btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 
