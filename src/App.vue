@@ -23,17 +23,19 @@
 
     <!-- Champ de code -->
     <div v-if="showInput" class="input-box">
-      <input v-model="codeInput" placeholder="Code à 4 chiffres" @keyup.enter="validateCode" />
+      <input v-model="codeInput" placeholder="Déverrouiller" @keyup.enter="validateCode" />
       <button @click="validateCode">OK</button>
     </div>
 
     <!-- Message HUD -->
-    <div class="hud">{{ message }}</div>
+    <div v-if="showMessage" class="hud">{{ message }}</div>
 
   </div>
 
-  <!-- Affichage de la photo-->
-  <img v-if="showPhoto" :src="frame" alt="Photo encadrée" class="photo-full"/>
+  <!-- Affichage des différentes images -->
+   <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
+
+  <!-- Bouton retour -->
   <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
 
 </template>
@@ -44,15 +46,23 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 // Images
 import backgroundRoom  from './assets/fond_chambre.png'
 import frame from './assets/photo.png'
+import drawer2 from './assets/tiroir1.png'
+import drawer from './assets/tiroir.png'
 
 const showPhoto = ref(false)
+const currentImage = ref(null)
 
-function openPhoto() {
+function openPhoto(image) {
+  currentImage.value = image
   showPhoto.value = true
   showInput.value = false
+  showMessage.value = false
 }
-function closePhoto() { 
-  showPhoto.value = false 
+
+function closePhoto() {
+  showPhoto.value = false
+  currentImage.value = null
+  showMessage.value = false
 }
 
 // Optionnel : fermer avec Échap
@@ -65,7 +75,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 // États principaux
 const startScreen = ref(true)
-const message = ref("Regarde autour de toi…")
+const message = ref("")
+const showMessage = ref(false)
 const showInput = ref(false)
 const codeInput = ref("")
 let currentObject = ""
@@ -84,24 +95,29 @@ function startGame() {
 function inspect(name) {
   showInput.value = false
   currentObject = name
+  showMessage.value = false 
 
   switch (name) {
     case 'desk':
-      message.value = "Sur le bureau, un ordinateur verrouillé t’attend. (Code JJMM)"
       showInput.value = true
       break
     case 'drawer':
-      message.value = "Le tiroir du bureau est verrouillé. Peut-être qu’un code se cache quelque part..."
-      showInput.value = true
+      openPhoto(drawer)
+      // showInput.value = true
       break
-    case 'trash':
-      message.value = "Tu regardes dans la poubelle... un papier chiffonné dit : « Le mot de passe est une date importante. »"
+    case 'drawer1':
+      openPhoto(drawer2)
       break
     case 'frame':
-      openPhoto()
+      openPhoto(frame)
       break
     case 'door':
-      message.value = "La porte est verrouillée. Il te faut une clé."
+      message.value = "La porte est verrouillée. Il faut une clé."
+      showMessage.value = true 
+      break
+    case 'closet':
+      message.value = "Cette armoire est verrouillée."
+      showMessage.value = true 
       break
   }
 }
@@ -253,7 +269,7 @@ function validateCode() {
   outline: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-/* Tiroir 1 */  /* Dupliquer et modifier pour les deux autres tiroirs */
+/* Tiroir 1 */ 
 .hotspot.drawer {
   position: absolute;
   left: 67%;
@@ -369,8 +385,8 @@ function validateCode() {
   max-width: min(70vw, 900px);
   max-height: 75vh;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-  z-index: 998; /* au-dessus de la scène mais sous le bouton */
+  /* box-shadow: 0 6px 18px rgba(25, 25, 25, 0.633); */
+  z-index: 998; 
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
