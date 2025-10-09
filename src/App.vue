@@ -38,6 +38,29 @@
   <!-- Bouton retour -->
   <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
 
+  <!-- Inventaire -->
+  <div v-if="!startScreen" class="inventory">
+    <h2>Inventaire</h2>
+    <div class="inventory-grid">
+      <div
+        v-for="(item, index) in inventory"
+        :key="index"
+        class="inventory-slot"
+        @click="useItem(item)"
+      >
+      <img v-if="item" :src="item.icon" :alt="item.name" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Hotspot de la clé, visible seulement quand le tiroir est ouvert et la clé non encore prise -->
+<button
+  v-if="isDrawerUnlocked && !hasKey && showPhoto && currentImage === drawerOpen"
+  class="hotspot key"
+  @click="pickUpKey"
+  aria-label="Clé"
+></button>
+
 </template>
 
 <script setup>
@@ -51,6 +74,10 @@ import drawer from './assets/tiroir.png'
 import macLocked from './assets/mac.png'
 import macUnlocked from './assets/macunlocked.png'
 import drawerOpen from './assets/tiroirOuvert.png'
+import keyImg from './assets/cle.png'
+import drawerOpenNoKey from './assets/tiroirOuvertsanscle.png'
+
+
 
 const showPhoto = ref(false)
 const currentImage = ref(null)
@@ -126,7 +153,8 @@ function inspect(name) {
       break
     case 'drawer':
       if (isDrawerUnlocked.value) {
-        openPhoto(drawerOpen)
+        // Si la clé a déjà été prise, on montre l'image sans clé
+        openPhoto(hasKey.value ? drawerOpenNoKey : drawerOpen)
       } else {
         showInput.value = true
         openPhoto(drawer)
@@ -179,6 +207,41 @@ async function validateCode() {
   codeInput.value = ""
 }
 
+// --- INVENTAIRE ---
+const inventory = ref([null, null, null, null]) // 4 cases vides pour l'instant
+const hasKey = ref(false) // pour savoir si la clé est récupérée
+
+// Fonction pour récupérer la clé
+function pickUpKey() {
+  if (!hasKey.value) {
+    const emptyIndex = inventory.value.findIndex(slot => slot === null)
+    if (emptyIndex !== -1) {
+      inventory.value[emptyIndex] = { name: 'key', icon: keyImg }
+      hasKey.value = true
+      flashMessage("Vous avez trouvé une clé !")
+
+      // Si on est en train d'afficher le tiroir ouvert, remplacer l'image par celle sans clé
+      if (showPhoto.value && currentImage.value === drawerOpen) {
+        currentImage.value = drawerOpenNoKey
+      }
+    }
+  }
+}
+
+function useItem(item) {
+  if (!item) return
+
+  if (item.name === 'key') {
+    // Si le joueur clique sur la porte avec la clé en sa possession
+    if (currentObject === 'door') {
+      flashMessage("Vous avez déverrouillé la porte ! 🎉")
+      // Tu pourrais ensuite déclencher une nouvelle scène ici
+    } else {
+      flashMessage("Il faut cliquer sur la porte pour utiliser la clé.")
+    }
+  }
+}
+
 function flashMessage(text, ms = 2500) {
   // Affiche le texte
   message.value = text
@@ -199,6 +262,14 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
 </script>
 
 <style scoped>
+:global(html, body) {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* empêche toute barre de scroll */
+  width: 100%;
+  height: 100%;
+}
+
 /* ---- ACCUEIL ---- */
 .start-screen {
   display: flex;
@@ -247,25 +318,39 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
 
 
 /* ---- CHAMBRE ---- */
-:global(body) { margin: 0; }
+/*:global(body) { margin: 0; }*/
 
 /* Fond de la scène */
-.room-scene{
-  width: 100vw;
-  height: 100vh;
-  background-size: contain;      /* ou 'contain' / 'auto' */
-  background-position: center; /* centre la photo */
-  background-repeat: no-repeat;/* ou 'repeat' si papier peint */
-  overflow: hidden;
+.room-scene {
+  position: fixed; /* permet de vraiment occuper tout l’écran sans scroll */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
+.hotspot {
+  overflow: hidden;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
 
+.hotspot:focus,
+.hotspot:active {
+  outline: none;
+  border: none;
+}
 
 /* Armoire */
 .hotspot.closet {
   position: absolute;
-  left: 86%;
-  bottom: 0vh;
+  left: 77%;
+  bottom: 6vh;
   width: clamp(270px, 14vw, 200px);
   height: clamp(580px, 7vh, 100px);
   transform: translateX(-50%);
@@ -273,31 +358,27 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   border: none;
   cursor: pointer;
 }
-.hotspot.closet:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
+
 
 /* Ordinateur sur le bureau */
 .hotspot.desk {
   position: absolute;
-  left: 56%;
-  bottom: 32vh;
-  width: clamp(90px, 14vw, 200px);
-  height: clamp(124px, 7vh, 100px);
+  left: 47.7%;
+  bottom: 38vh;
+  width: clamp(89px, 14vw, 200px);
+  height: clamp(127px, 7vh, 100px);
   transform: translateX(-50%);
   background: transparent;
   border: none;
   cursor: pointer;
 }
-.hotspot.desk:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
+
 
 /* Porte */
 .hotspot.door {
   position: absolute;
-  right: 58%;
-  bottom: 1vh;
+  right: 66%;
+  bottom: 7vh;
   width: clamp(100px, 14vw, 200px);
   height: clamp(630px, 7vh, 100px);
   transform: translateX(-50%);
@@ -305,16 +386,12 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   border: none;
   cursor: pointer;
 }
-.hotspot.door:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
-
 
 /* Cadre photo */
 .hotspot.frame {
   position: absolute;
-  left: 71.8%;
-  bottom: 50vh;
+  left: 63.25%;
+  bottom: 57vh;
   width: clamp(45px, 14vw, 45px);
   height: clamp(60px, 7vh, 100px);
   transform: translateX(-50%);
@@ -322,15 +399,13 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   border: none;
   cursor: pointer;
 }
-.hotspot.frame:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
+
 
 /* Tiroir 1 */ 
 .hotspot.drawer {
   position: absolute;
-  left: 67%;
-  bottom: 18.4vh;
+  left: 58.4%;
+  bottom: 24.8vh;
   width: clamp(110px, 14vw, 50px);
   height: clamp(40px, 7vh, 100px);
   transform: translateX(-50%);
@@ -338,15 +413,12 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   border: none;
   cursor: pointer;
 }
-.hotspot.drawer:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
 
 /* Tiroir 2 */
 .hotspot.drawer2 {
   position: absolute;
-  left: 45.2%;
-  bottom: 18.4vh;
+  left: 37%;
+  bottom: 24.8vh;
   width: clamp(108px, 14vw, 50px);
   height: clamp(40px, 7vh, 100px);
   transform: translateX(-50%);
@@ -354,9 +426,7 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   border: none;
   cursor: pointer;
 }
-.hotspot.drawer2:hover {
-  outline: 2px solid rgba(255, 255, 255, 0.25);
-}
+
 
 /* Message */
 .hud {
@@ -381,7 +451,7 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
 .input-box {
   position: fixed;
   left: 50%;
-  bottom: 38vh;
+  bottom: 39vh;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
@@ -400,20 +470,7 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   color: #faf9f9;
   text-align: center;
 }
-/*
-.input-box button {
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: #6b8cff;
-  color: #fff;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.input-box button:hover {
-  filter: brightness(1.1);
-}
-*/
+
 /* Responsive */
 @media (max-width: 600px) {
   .hud {
@@ -481,6 +538,80 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
     width: 100%;
     text-align: center;
   }
+}
+
+/* ---- INVENTAIRE ---- */
+:root {
+  --inv-offset-x: 24px; /* plus grand => plus à GAUCHE depuis le bord droit */
+  --inv-offset-y: 24px; /* plus grand => plus BAS depuis le haut */
+}
+
+/* ---- INVENTAIRE ---- */
+.inventory {
+  position: fixed;
+  right: 14px;
+  top: 100px;
+  width: 160px;
+  height: calc(100vh - var(--inv-offset-y) - 24px); /* 24px = marge bas symétrique; ajuste si besoin */
+  background: rgba(0, 0, 0, 0);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  z-index: 960;
+  border-radius: 10px;
+}
+
+.inventory h2 {
+  position: fixed;
+  right: 55px;     /* négatif = sort du panneau vers la gauche */
+  top: 53px;
+  transform: rotate(0deg);
+  transform-origin: left top;
+  /* background: rgba(255,255,255,0.15) */;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.inventory-slot {
+  width: 60px;
+  height: 60px;
+  background: rgba(200, 200, 200, 0.3);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.inventory-slot img {
+  max-width: 50px;
+  max-height: 50px;
+}
+
+
+/* --- Hotspot de la clé --- */
+.hotspot.key {
+  position: absolute;
+  left: 46%;     /* même base que le tiroir pour bien la placer */
+  bottom: 33vh;    /* ajuste selon l'endroit exact où tu veux la clé */
+  width: 100px;
+  height: 100px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 980; /* au-dessus du tiroir */
 }
 
 
