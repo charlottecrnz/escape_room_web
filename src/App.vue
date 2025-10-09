@@ -34,6 +34,18 @@
     pattern="\d*" maxlength="4" ref="codeField" required/>
   </form>
   
+  <!-- Numpad du tiroir (superposé à l'image) -->
+ <div
+  v-if="showNumpad && currentObject === 'drawer' && showPhoto"
+  class="numpad-container"
+>
+  <div class="numpad-display">{{ codeInput }}</div>
+
+  <button v-for="n in 9" :key="n" class="numpad-btn" :class="'btn' + n" @click="pressNumber(n)"></button>
+  <button class="numpad-btn btn0" @click="pressNumber(0)"></button>
+  <button class="numpad-btn btnClear" @click="clearCode">C</button>
+</div>
+
 
   <!-- Bouton retour -->
   <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
@@ -98,6 +110,7 @@ function closePhoto() {
   codeField.value?.blur()
 
   showMessage.value = false
+  showNumpad.value = false
 }
 
 // Optionnel : fermer avec Échap
@@ -153,12 +166,18 @@ function inspect(name) {
       break
     case 'drawer':
       if (isDrawerUnlocked.value) {
-        // Si la clé a déjà été prise, on montre l'image sans clé
         openPhoto(hasKey.value ? drawerOpenNoKey : drawerOpen)
+        showNumpad.value = false
       } else {
-        showInput.value = true
         openPhoto(drawer)
-        showCodeBox()
+        showInput.value = false
+        codeInput.value = ""
+        // n'affiche le numpad que quand la photo du tiroir est effectivement visible
+        nextTick(() => {
+          if (showPhoto.value && currentImage.value === drawer) {
+            showNumpad.value = true
+          }
+        })
       }
       break
     case 'drawer1':
@@ -196,12 +215,18 @@ async function validateCode() {
       isDrawerUnlocked.value = true
       openPhoto(drawerOpen)
       showInput.value = false
+      showNumpad.value = false
     } else {
       flashMessage("Code incorrect", 1500)
-      showInput.value = true
+      showInput.value = false
       await nextTick()
       codeField.value?.focus()
+      
     }
+  }
+
+  if (!showPhoto.value) {
+    showNumpad.value = false
   }
 
   codeInput.value = ""
@@ -258,6 +283,19 @@ function flashMessage(text, ms = 2500) {
 }
 
 onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
+
+const showNumpad = ref(false)
+// passe à false quand tout est réglé pour les rendre invisibles
+const numpadDebug = ref(true)  // <- mettre false quand fini
+
+function pressNumber(num) {
+  if (codeInput.value.length < 4) codeInput.value += String(num)
+  if (codeInput.value.length === 4) validateCode()
+}
+
+function clearCode() {
+  codeInput.value = "";
+}
 
 </script>
 
@@ -613,6 +651,72 @@ onBeforeUnmount(() => {if (messageTimer) clearTimeout(messageTimer)})
   cursor: pointer;
   z-index: 980; /* au-dessus du tiroir */
 }
+
+/* --- Numpad --- */ 
+:global(.numpad-container) {
+  position: fixed;
+  left: 50%;
+  bottom: 58vh;
+  transform: translateX(-50%);
+  z-index: 9999;
+}
+
+:global(.numpad-display) {
+  position: absolute;
+  top: -40px;
+  left: 50px;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 20px;
+  background: rgba(70,70,70,0.85);
+  color: white;
+  border-radius: 6px;
+  text-align: center;
+  line-height: 23px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  font-size: 16px;
+  z-index: 10000;
+}
+
+
+:global(.numpad-btn) {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent;
+  font-size: 0;
+
+  width: 25px !important;
+  min-width: 0 !important;
+  -webkit-appearance: none;
+  appearance: none;
+
+  height: 25px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+
+:global(.btn1) { left: 7px;   top: 7px; }
+:global(.btn2) { left: 41px;  top: 7px; }
+:global(.btn3) { left: 74px;  top: 7px; }
+
+:global(.btn4) { left: 7px;   top: 42px; }
+:global(.btn5) { left: 41px;  top: 42px; }
+:global(.btn6) { left: 74px;  top: 42px; }
+
+:global(.btn7) { left: 7px;   top: 74px; }
+:global(.btn8) { left: 41px;  top: 74px; }
+:global(.btn9) { left: 74px;  top: 74px; }
+
+:global(.btn0)     { left: 41px;  top: 107px; }
+:global(.btnClear) { left: 7px;   top: 107px; }
 
 
 </style>
