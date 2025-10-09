@@ -3,9 +3,10 @@
   <div v-if="startScreen" class="start-screen">
     <h1>🔐 Escape Game </h1>
       <p class="strapline">
-        Vous vous réveillé enfermé dans un endroit que vous ne connaissez pas. <br>
-        Le but est de trouver comment en sortir. <br>
-        Pour cela, vous devez trouver des indices afin d'ouvrir les différentes pièces.
+        Tu te réveilles dans la chambre d'une personne inconnue. <br>
+        Tout semble normal. Mais très vite, quelque chose ne tourne pas rond. <br>
+        Chaque pièce que tu explores te rapproche de la sortie. <br>
+        Mais attention : <strong>La maison n'est peut-être pas ce qu'elle semble être.</strong> 
       </p>
     <button class="play-button" @click="startGame">Commencer</button>
   </div>
