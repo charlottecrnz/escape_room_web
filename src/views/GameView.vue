@@ -1,0 +1,413 @@
+<template>
+  <!-- Page d’accueil -->
+  <StartScreen v-if="startScreen" @start="startGame" />
+
+  <!-- Chambre -->
+  <RoomChambre
+    v-else
+    @inspect="inspect"
+    :backgroundRoom="backgroundRoom"
+  />
+
+  <!-- Image affichée -->
+  <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
+
+  <!-- Message -->
+  <div v-if="showMessage" class="hud">{{ message }}</div>
+
+  <!-- Champ de code -->
+  <form v-if="showInput" class="input-box" @submit.prevent="validateCode">
+    <input v-model="codeInput" placeholder="Mot de passe" inputmode="numeric"
+    pattern="\d*" maxlength="4" ref="codeField" required/>
+  </form>
+
+  <!-- Numpad du tiroir -->
+  <Numpad
+    v-if="showNumpad && currentObject === 'drawer' && showPhoto"
+    :code="codeInput"
+    @press="pressNumber"
+    @clear="clearCode"
+  />
+
+  <!-- Inventaire -->
+  <Inventory
+    v-if="!startScreen"
+    :inventory="inventory"
+    @use="useItem"
+  />
+
+  <!-- Bouton retour -->
+  <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
+
+  <!-- Hotspot de la clé -->
+  <button
+    v-if="isDrawerUnlocked && !hasKey && showPhoto && currentImage === drawerOpen"
+    class="hotspot key"
+    @click="pickUpKey"
+    aria-label="Clé"
+  ></button>
+
+</template>
+
+<script setup>
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+
+// Composants
+import StartScreen from '../components/StartScreen.vue'
+import RoomChambre from '../components/RoomChambre.vue'
+import Inventory from '../components/Inventory.vue'
+import Numpad from '../components/Numpad.vue'
+
+// Images
+import backgroundRoom from '../assets/fond_chambre.png'
+import frame from '../assets/photo.png'
+import drawer2 from '../assets/tiroir1.png'
+import drawer from '../assets/tiroir.png'
+import macLocked from '../assets/mac.png'
+import macUnlocked from '../assets/macunlocked.png'
+import drawerOpen from '../assets/tiroirOuvert.png'
+import keyImg from '../assets/cle.png'
+import drawerOpenNoKey from '../assets/tiroirOuvertsanscle.png'
+
+// --- ÉTATS PRINCIPAUX ---
+const startScreen = ref(true)
+const showPhoto = ref(false)
+const showMessage = ref(false)
+const showInput = ref(false)
+const showNumpad = ref(false)
+const currentImage = ref(null)
+const codeInput = ref("")
+const message = ref("")
+const codeField = ref(null)
+let currentObject = ""
+let messageTimer = null
+
+// États d’avancement du jeu
+const isComputerUnlocked = ref(false)
+const isDrawerUnlocked = ref(false)
+const hasKey = ref(false)
+
+// Codes
+const computerCode = "1207"
+const drawerCode   = "8421"
+
+// --- INVENTAIRE ---
+const inventory = ref([null, null, null, null])
+
+// --- FONCTIONS GÉNÉRALES ---
+function startGame() {
+  startScreen.value = false
+}
+
+function openPhoto(image) {
+  currentImage.value = image
+  showPhoto.value = true
+  showMessage.value = false
+}
+
+function closePhoto() {
+  showPhoto.value = false
+  currentImage.value = null
+  showMessage.value = false
+
+  showInput.value = false
+  codeInput.value = ""
+  codeField.value?.blur()
+
+  showMessage.value = false
+  showNumpad.value = false
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape' && showPhoto.value) closePhoto()
+}
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+
+function flashMessage(text, ms = 2500) {
+  message.value = text
+  showMessage.value = true
+  if (messageTimer) clearTimeout(messageTimer)
+  messageTimer = setTimeout(() => {
+    showMessage.value = false
+    messageTimer = null
+  }, ms)
+}
+
+function inspect(name) {
+  showInput.value = false
+  currentObject = name
+  showMessage.value = false 
+
+  switch (name) {
+    case 'desk':
+      if (isComputerUnlocked.value) {
+        openPhoto(macUnlocked)
+      } else {
+        showInput.value = true
+        openPhoto(macLocked)
+        showCodeBox()
+      }
+      break
+    case 'drawer':
+      if (isDrawerUnlocked.value) {
+        openPhoto(hasKey.value ? drawerOpenNoKey : drawerOpen)
+        showNumpad.value = false
+      } else {
+        openPhoto(drawer)
+        showInput.value = false
+        codeInput.value = ""
+        // n'affiche le numpad que quand la photo du tiroir est effectivement visible
+        nextTick(() => {
+          if (showPhoto.value && currentImage.value === drawer) {
+            showNumpad.value = true
+          }
+        })
+      }
+      break
+    case 'drawer1':
+      openPhoto(drawer2)
+      break
+    case 'frame':
+      openPhoto(frame)
+      break
+    case 'door':
+      flashMessage("La porte est verrouillée. Il faut une clé.")
+      break
+    case 'closet':
+      flashMessage("Cette armoire est verrouillée.")
+      break
+  }
+}
+
+
+// --- VALIDATION DE CODE ---
+async function validateCode() {
+  if (currentObject === 'desk') {
+    if (codeInput.value === computerCode) {
+      isComputerUnlocked.value = true
+      openPhoto(macUnlocked)
+      showInput.value = false
+    } else {
+      flashMessage("Code incorrect", 1500)
+      showInput.value = true
+      await nextTick()
+      codeField.value?.focus()
+    }
+  }
+
+  if (currentObject === 'drawer') {
+    if (codeInput.value === drawerCode) {
+      isDrawerUnlocked.value = true
+      openPhoto(drawerOpen)
+      showInput.value = false
+      showNumpad.value = false
+    } else {
+      flashMessage("Code incorrect", 1500)
+      showInput.value = false
+      await nextTick()
+      codeField.value?.focus()
+      
+    }
+  }
+
+  if (!showPhoto.value) {
+    showNumpad.value = false
+  }
+
+  codeInput.value = ""
+}
+
+async function showCodeBox() {
+  showInput.value = true
+  await nextTick()
+  codeField.value?.focus()
+}
+
+// --- NUMPAD ---
+async function pressNumber(num) {
+  if (codeInput.value.length < 4) {
+    codeInput.value += String(num)
+  }
+
+  if (codeInput.value.length === 4) {
+    // ⏱ laisse le temps d’afficher le 4ᵉ chiffre
+    setTimeout(() => {
+      validateCode()
+    }, 200)
+  }
+}
+
+function clearCode() {
+  codeInput.value = ""
+}
+
+// --- INVENTAIRE ---
+function pickUpKey() {
+  if (!hasKey.value) {
+    const emptyIndex = inventory.value.findIndex(slot => slot === null)
+    if (emptyIndex !== -1) {
+      inventory.value[emptyIndex] = { name: 'key', icon: keyImg }
+      hasKey.value = true
+      flashMessage("Vous avez trouvé une clé !")
+
+      if (showPhoto.value && currentImage.value === drawerOpen) {
+        currentImage.value = drawerOpenNoKey
+      }
+    }
+  }
+}
+
+function useItem(item) {
+  if (!item) return
+  if (item.name === 'key') {
+    if (currentObject === 'door') {
+      flashMessage("Vous avez déverrouillé la porte ! 🎉")
+      const index = inventory.value.findIndex(i => i && i.name === 'key')
+      if (index !== -1) inventory.value[index] = null
+      hasKey.value = false
+      // ajouter la nouvelle pièce ici
+    } else {
+      flashMessage("Il faut cliquer sur la porte pour utiliser la clé.")
+    }
+  }
+}
+
+onBeforeUnmount(() => {
+  if (messageTimer) clearTimeout(messageTimer)
+})
+</script>
+
+<style scoped>
+.photo-full {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(70vw, 900px);
+  max-height: 75vh;
+  border-radius: 12px;
+  /* box-shadow: 0 6px 18px rgba(25, 25, 25, 0.633); */
+  z-index: 900; 
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hud {
+  position: fixed;
+  left: 50%;
+  bottom: 4vh;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 1vh 2vw;
+  border-radius: 10px;
+  color: #e9eef8;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(12px, 1.4vw, 18px);
+  backdrop-filter: blur(2px);
+  text-align: center;
+  width: 90vw;
+  max-width: 700px;
+  z-index: 950; /* au-dessus de l'image */
+}
+
+.input-box {
+  position: fixed;
+  left: 50%;
+  bottom: 39vh;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  backdrop-filter: blur(2px);
+  z-index: 950;
+}
+
+.input-box input {
+  width: clamp(160px, 20vw, 120px);
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #5a5a5b;
+  color: #faf9f9;
+  text-align: center;
+}
+
+.back-btn-top {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  background: #686869;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.back-btn-top:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.hotspot.key {
+  position: absolute;
+  left: 46%;
+  bottom: 33vh;
+  width: 100px;
+  height: 100px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 980;
+}
+
+/* Mobile : passer en colonne */
+@media (max-width: 680px) {
+  .lightbox-content {
+    flex-direction: column;
+  }
+  .lightbox-img {
+    max-width: 86vw;
+    max-height: 60vh;
+  }
+  .back-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hud {
+    font-size: 12px;
+    bottom: 3vh;
+  }
+  .input-box {
+    bottom: 18vh;
+    flex-direction: column;
+    align-items: center;
+  }
+  .input-box input {
+    width: 70vw;
+  }
+  .input-box button {
+    width: 40vw;
+  }
+}
+
+/* --- Hotspot de la clé --- */
+.hotspot.key {
+  position: absolute;
+  left: 46%;     /* même base que le tiroir pour bien la placer */
+  bottom: 33vh;    /* ajuste selon l'endroit exact où tu veux la clé */
+  width: 100px;
+  height: 100px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 980; /* au-dessus du tiroir */
+}
+</style>
