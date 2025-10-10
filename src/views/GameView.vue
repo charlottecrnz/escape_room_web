@@ -1,13 +1,22 @@
 <template>
-  <!-- Page d’accueil -->
-  <StartScreen v-if="startScreen" @start="startGame" />
+<!-- Scènes -->
+ <!-- Page d'accueil -->
+<StartScreen v-if="startScreen" @start="startGame" />
 
-  <!-- Chambre -->
-  <RoomChambre
-    v-else
-    @inspect="inspect"
-    :backgroundRoom="backgroundRoom"
-  />
+  <!-- Chambre-->
+<RoomChambre
+  v-else-if="currentScene === 'chambre'"
+  @inspect="inspect"
+  :backgroundRoom="backgroundRoom"
+/>
+
+<!-- Exemple pour plus tard :
+<RoomCuisine
+  v-else-if="currentScene === 'cuisine'"
+  @inspect="inspectCuisine"
+  :backgroundCuisine="backgroundCuisine"
+/>
+-->
 
   <!-- Image affichée -->
   <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
@@ -36,8 +45,12 @@
     @use="useItem"
   />
 
-  <!-- Bouton retour -->
+  <!-- Bouton retour photo -->
   <button v-if="showPhoto" class="back-btn-top" @click="closePhoto">Retour</button>
+
+  <!-- Boutons de navigation de scènes -->
+  <button v-if="!startScreen" class="backback-btn-top" @click="handleBack">Retour</button>
+  <button v-if="!startScreen" class="exit-btn-top" @click="quitToHome">Quitter</button>
 
   <!-- Hotspot de la clé -->
   <button
@@ -50,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 // Composants
 import StartScreen from '../components/StartScreen.vue'
@@ -95,10 +108,74 @@ const drawerCode   = "8421"
 const inventory = ref([null, null, null, null])
 
 // --- FONCTIONS GÉNÉRALES ---
+/** Pile des scènes visitées : on push pour avancer, on pop pour Retour */
+const sceneStack = ref([])
+
+const currentScene = computed(() => {
+  return sceneStack.value[sceneStack.value.length - 1] ?? null
+})
+
 function startGame() {
+  resetAll()                  // remet tout à zéro proprement
   startScreen.value = false
+  sceneStack.value = ['chambre']  // première pièce
 }
 
+function goToScene(name) {
+  sceneStack.value.push(name)
+}
+
+function handleBack() {
+  // Priorité UX : si une photo/overlay est ouverte, on la ferme d'abord
+  if (showPhoto.value) {
+    closePhoto()
+    return
+  }
+  if (sceneStack.value.length > 1) {
+    sceneStack.value.pop()
+  } else {
+    // Déjà à la première scène du jeu
+    flashMessage('Tu es déjà dans la première pièce.')
+  }
+}
+
+function quitToHome() {
+  resetAll()
+  startScreen.value = true
+}
+
+/** Réinitialise l’état du jeu (sans quitter/afficher l’accueil) */
+function resetAll() {
+  // UI
+  showPhoto.value = false
+  currentImage.value = null
+  showMessage.value = false
+  showInput.value = false
+  showNumpad.value = false
+  codeInput.value = ''
+  message.value = ''
+  // Progression
+  isComputerUnlocked.value = false
+  isDrawerUnlocked.value = false
+  hasKey.value = false
+  inventory.value = [null, null, null, null]
+  // Navigation
+  sceneStack.value = []
+}
+
+/*
+if (item.name === 'key') {
+  if (currentObject === 'door') {
+    flashMessage('Vous avez déverrouillé la porte ! 🎉')
+    // Ex : enchaîner sur la scène "cuisine" après 600 ms
+    setTimeout(() => {
+      goToScene('cuisine')   // tu créeras RoomCuisine.vue plus tard
+    }, 600)
+  } else {
+    flashMessage('Il faut cliquer sur la porte pour utiliser la clé.')
+  }
+}
+*/
 function openPhoto(image) {
   currentImage.value = image
   showPhoto.value = true
@@ -231,7 +308,6 @@ async function pressNumber(num) {
   }
 
   if (codeInput.value.length === 4) {
-    // ⏱ laisse le temps d’afficher le 4ᵉ chiffre
     setTimeout(() => {
       validateCode()
     }, 200)
@@ -409,5 +485,47 @@ onBeforeUnmount(() => {
   border: none;
   cursor: pointer;
   z-index: 980; /* au-dessus du tiroir */
+}
+
+.backback-btn-top {
+  position: fixed;
+  top: 20px;
+  left: 50px;
+  width: 120px;
+  height: 50px;
+  background: #686869;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.backback-btn-top:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.exit-btn-top {
+  position: fixed;
+  bottom: 20px;
+  left: 50px;
+  width: 120px;
+  height: 50px;
+  background: #686869;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 999;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.exit-btn-top:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 </style>
