@@ -33,7 +33,7 @@ defineProps({
   width: 160px;
   height: calc(100vh - var(--inv-offset-y) - 24px); /* 24px = marge bas symétrique; ajuste si besoin */
   background: rgba(0, 0, 0, 0);
-  color: white;
+  color: rgb(144, 143, 143);
   display: flex;
   flex-direction: column;
   align-items: center;

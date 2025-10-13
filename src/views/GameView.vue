@@ -10,13 +10,28 @@
   :backgroundRoom="backgroundRoom"
 />
 
-<!-- Exemple pour plus tard :
+  <!-- Couloir-->
+<RoomCouloir
+  v-else-if="currentScene === 'couloir'"
+  @inspect="inspect"
+  :backgroundCouloir="backgroundCouloir"
+/>
+
+
+  <!-- Cuisine-->
 <RoomCuisine
   v-else-if="currentScene === 'cuisine'"
-  @inspect="inspectCuisine"
+  @inspect="inspect"
   :backgroundCuisine="backgroundCuisine"
 />
--->
+
+  <!-- Bureau médical-->
+<Med
+  v-else-if="currentScene === 'med'"
+  @inspect="inspect"
+  :backgroundMed="backgroundMed"
+/>
+
 
   <!-- Image affichée -->
   <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
@@ -70,6 +85,9 @@ import StartScreen from '../components/StartScreen.vue'
 import RoomChambre from '../components/RoomChambre.vue'
 import Inventory from '../components/Inventory.vue'
 import Numpad from '../components/Numpad.vue'
+import RoomCouloir from '../components/RoomCouloir.vue'
+import RoomCuisine from '../components/RoomCuisine.vue'
+import Med from '../components/Med.vue'
 
 // Images
 import backgroundRoom from '../assets/fond_chambre.png'
@@ -81,6 +99,9 @@ import macUnlocked from '../assets/macunlocked.png'
 import drawerOpen from '../assets/tiroirOuvert.png'
 import keyImg from '../assets/cle.png'
 import drawerOpenNoKey from '../assets/tiroirOuvertsanscle.png'
+import backgroundCouloir from '../assets/couloir.png'
+import backgroundCuisine from '../assets/cuisine.png'
+import backgroundMed from '../assets/bureau_med.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -118,7 +139,7 @@ const currentScene = computed(() => {
 function startGame() {
   resetAll()                  // remet tout à zéro proprement
   startScreen.value = false
-  sceneStack.value = ['chambre']  // première pièce
+  sceneStack.value = ['med']  // première pièce
 }
 
 function goToScene(name) {
@@ -163,19 +184,7 @@ function resetAll() {
   sceneStack.value = []
 }
 
-/*
-if (item.name === 'key') {
-  if (currentObject === 'door') {
-    flashMessage('Vous avez déverrouillé la porte ! 🎉')
-    // Ex : enchaîner sur la scène "cuisine" après 600 ms
-    setTimeout(() => {
-      goToScene('cuisine')   // tu créeras RoomCuisine.vue plus tard
-    }, 600)
-  } else {
-    flashMessage('Il faut cliquer sur la porte pour utiliser la clé.')
-  }
-}
-*/
+
 function openPhoto(image) {
   currentImage.value = image
   showPhoto.value = true
@@ -253,6 +262,9 @@ function inspect(name) {
       break
     case 'closet':
       flashMessage("Cette armoire est verrouillée.")
+      break
+    case 'door2':
+      goToScene('cuisine')
       break
   }
 }
@@ -342,7 +354,7 @@ function useItem(item) {
       const index = inventory.value.findIndex(i => i && i.name === 'key')
       if (index !== -1) inventory.value[index] = null
       hasKey.value = false
-      // ajouter la nouvelle pièce ici
+      goToScene('couloir');
     } else {
       flashMessage("Il faut cliquer sur la porte pour utiliser la clé.")
     }
