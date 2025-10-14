@@ -3,12 +3,14 @@
     <button class="hotspot door" @click="$emit('inspect', 'door')" aria-label="Porte"></button>
     <button class="hotspot door1" @click="$emit('inspect', 'door1')" aria-label="Porte1"></button>
     <button class="hotspot door2" @click="$emit('inspect', 'door2')" aria-label="Porte2"></button>
-    <button class="hotspot drawer" @click="$emit('inspect', 'desk')" aria-label="Tiroir"></button>
-    <button class="hotspot drawer1" @click="$emit('inspect', 'desk')" aria-label="Tiroir1"></button>
-    <button class="hotspot drawer2" @click="$emit('inspect', 'desk')" aria-label="Tiroir2"></button>
-    <button class="hotspot drawer3" @click="$emit('inspect', 'desk')" aria-label="Tiroir3"></button>
-    <button class="hotspot books" @click="$emit('inspect', 'closet')" aria-label="Livres"></button>
-    <button class="hotspot pot" @click="$emit('inspect', 'frame')" aria-label="Pot"></button>
+    <button class="hotspot drawer" @click="$emit('inspect', 'drawer')" aria-label="Tiroir"></button>
+    <button class="hotspot drawer1" @click="$emit('inspect', 'drawer1')" aria-label="Tiroir1"></button>
+    <button class="hotspot drawer2" @click="$emit('inspect', 'drawer2')" aria-label="Tiroir2"></button>
+    <button class="hotspot drawer3" @click="$emit('inspect', 'drawer3')" aria-label="Tiroir3"></button>
+    <button class="hotspot books" @click="$emit('inspect', 'books')" aria-label="Livres"></button>
+    <button class="hotspot pot" @click="$emit('inspect', 'pot')" aria-label="Pot"></button>
+    <button class="hotspot frame" @click="$emit('inspect', 'frame')" aria-label="Cadre"></button>
+
   </div>
 </template>
 
@@ -128,5 +130,15 @@ defineProps({
   height: clamp(40px, 7vh, 20px);
   transform: translateX(-50%);
 }
+
+/* Cadre photo */
+.hotspot.frame {
+  left: 57.28%;
+  bottom: 62.33vh;
+  width: clamp(66px, 14vw, 20px);
+  height: clamp(80px, 7vh, 20px);
+  transform: translateX(-50%);
+}
+
 </style>
 

@@ -11,7 +11,6 @@ export function createInteractions(ctx) {
             ui.openPhoto(photos.drawer)
             ui.setShowInput(false)
             nextTick(() => {
-              // ✅ maintenant showPhoto et currentImage existent
               if (ctx.showPhoto.value && ctx.currentImage.value === photos.drawer) {
                 ui.setShowNumpad(true)
               }
@@ -29,6 +28,11 @@ export function createInteractions(ctx) {
             ui.showCodeBox()
             }
         },
+        files: () => ui.openPhoto(photos.dossiers),
+        dictaphone: () => {
+          ui.flashMessage("Lecture du rapport du médecin…")
+          ctx.audio.playAudio(dictaphone1)
+        },
     },
 
     cuisine: {
@@ -42,6 +46,21 @@ export function createInteractions(ctx) {
     couloir: {
       door: () => ui.flashMessage("Tu ne peux pas ouvrir cette porte sans clé."),
       door2: () => nav.goToScene('cuisine'),
+      frame: () => {
+        if(!state.isFrameFalled.value){
+          state.isFrameFalled.value = true
+          ui.flashMessage("Le cadre est tombé... quelque chose a changé.")
+        }
+        else{
+          ui.openPhoto(photos.gravure)
+        }
+        
+      },
+      pot: () => {
+        ui.openPhoto(photos.pot)
+        state.isPhotoPotOpen.value = true;
+      },
+      paper: () => {ui.openPhoto(photos.paper)}
     },
 
     chambre: {

@@ -10,11 +10,10 @@
   :backgroundRoom="backgroundRoom"
 />
 
-  <!-- Couloir-->
 <RoomCouloir
   v-else-if="currentScene === 'couloir'"
   @inspect="inspect"
-  :backgroundCouloir="backgroundCouloir"
+  :backgroundCouloir="isFrameFalled ? backgroundCouloir1 : backgroundCouloir"
 />
 
 
@@ -32,6 +31,8 @@
   :backgroundMed="backgroundMed"
 />
 
+  <!-- Fond sombre derrière la photo -->
+  <div v-if="showPhoto" class="photo-overlay" @click="closePhoto"></div>
 
   <!-- Image affichée -->
   <img v-if="showPhoto" :src="currentImage" alt="Objet inspecté" class="photo-full"/>
@@ -75,6 +76,14 @@
     aria-label="Clé"
   ></button>
 
+  <!-- Hotspot de la clé -->
+  <button
+    v-if="isPhotoPotOpen && showPhoto && currentImage === pot"
+    class="hotspot paper"
+    @click="inspect('paper')"
+    aria-label="Papier"
+  ></button>
+
 </template>
 
 <script setup>
@@ -104,6 +113,12 @@ import backgroundCouloir from '../assets/couloir.png'
 import backgroundCuisine from '../assets/cuisine.png'
 import backgroundMed from '../assets/bureau_med.png'
 import postithorloge from '../assets/postithorloge.png'
+import dossiers from '../assets/dossiers.png'
+import dictaphone1 from '../assets/dictaphone1.mp3'
+import backgroundCouloir1 from '../assets/couloir_sanscadre.png'
+import gravure from '../assets/gravure.png'
+import pot from '../assets/pot.png'
+import paper from '../assets/papier.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -117,6 +132,9 @@ const message = ref("")
 const codeField = ref(null)
 let currentObject = ""
 let messageTimer = null
+const isFrameFalled = ref(false)
+const isPhotoPotOpen = ref(false)
+
 
 // États d’avancement du jeu
 const isComputerUnlocked = ref(false)
@@ -141,12 +159,18 @@ const interactions = createInteractions({
     macUnlocked,
     frame,
     drawer2,
-    postithorloge
+    postithorloge,
+    dossiers,
+    gravure,
+    pot,
+    paper,
   },
   state: {
     isDrawerUnlocked,
     isComputerUnlocked,
     hasKey,
+    isFrameFalled,
+    isPhotoPotOpen,
   },
   ui: {
     openPhoto,
@@ -161,7 +185,8 @@ const interactions = createInteractions({
   },
   nextTick,
   showPhoto, 
-  currentImage, 
+  currentImage,
+  audio: { playAudio, dictaphone1},
 })
 
 // --- FONCTIONS GÉNÉRALES ---
@@ -180,6 +205,7 @@ function startGame() {
 
 function goToScene(name) {
   sceneStack.value.push(name)
+  showPhoto.value = false
 }
 
 function handleBack() {
@@ -362,6 +388,22 @@ function useItem(item) {
 onBeforeUnmount(() => {
   if (messageTimer) clearTimeout(messageTimer)
 })
+
+// --- Lecture d'audio --- 
+const audioPlayer = ref(null)
+
+function playAudio(src) {
+  // Stoppe l’ancien son s’il y en a un
+  if (audioPlayer.value) {
+    audioPlayer.value.pause()
+    audioPlayer.value.currentTime = 0
+  }
+
+  // Joue le nouveau son
+  audioPlayer.value = new Audio(src)
+  audioPlayer.value.play()
+}
+
 </script>
 
 <style scoped>
@@ -436,6 +478,19 @@ onBeforeUnmount(() => {
 .back-btn-top:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+.hotspot {
+  position: absolute;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+.hotspot:focus,
+.hotspot:active {
+  outline: none;
+  border: none;
 }
 
 .hotspot.key {
@@ -537,5 +592,26 @@ onBeforeUnmount(() => {
 .exit-btn-top:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+.photo-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.65); /* fond semi-transparent */
+  z-index: 890; /* juste en dessous de ton image (z-index: 900 dans ton code) */
+  backdrop-filter: blur(2px); /* optionnel : léger flou de fond */
+  transition: opacity 0.3s ease;
+}
+
+.hotspot.paper {
+  position: absolute;
+  left: 41.5%;    
+  bottom: 24.7vh;    
+  width: 259px;
+  height: 289px;
+  z-index: 980;
 }
 </style>
