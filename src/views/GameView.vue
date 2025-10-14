@@ -88,6 +88,7 @@ import Numpad from '../components/Numpad.vue'
 import RoomCouloir from '../components/RoomCouloir.vue'
 import RoomCuisine from '../components/RoomCuisine.vue'
 import Med from '../components/Med.vue'
+import { createInteractions } from '@/game/interactions'
 
 // Images
 import backgroundRoom from '../assets/fond_chambre.png'
@@ -122,11 +123,41 @@ const isDrawerUnlocked = ref(false)
 const hasKey = ref(false)
 
 // Codes
-const computerCode = "1207"
+const computerCode = "1010"
 const drawerCode   = "8421"
 
 // --- INVENTAIRE ---
 const inventory = ref([null, null, null, null])
+
+
+// --- INTERACTIONS ---g
+const interactions = createInteractions({
+  photos: {
+    drawer,
+    drawerOpen,
+    drawerOpenNoKey,
+    macLocked,
+    macUnlocked,
+    frame,
+    drawer2,
+  },
+  state: {
+    isDrawerUnlocked,
+    isComputerUnlocked,
+    hasKey,
+  },
+  ui: {
+    openPhoto,
+    flashMessage,
+    showCodeBox,
+    setShowNumpad: v => { showNumpad.value = v },
+    setShowInput: v => { showInput.value = v },
+  },
+  nav: {
+    goToScene,
+  },
+  nextTick,
+})
 
 // --- FONCTIONS GÉNÉRALES ---
 /** Pile des scènes visitées : on push pour avancer, on pop pour Retour */
@@ -221,54 +252,15 @@ function flashMessage(text, ms = 2500) {
 }
 
 function inspect(name) {
-  showInput.value = false
-  currentObject = name
-  showMessage.value = false 
+  const scene = currentScene.value
+  const sceneActions = interactions[scene]
 
-  switch (name) {
-    case 'desk':
-      if (isComputerUnlocked.value) {
-        openPhoto(macUnlocked)
-      } else {
-        showInput.value = true
-        openPhoto(macLocked)
-        showCodeBox()
-      }
-      break
-    case 'drawer':
-      if (isDrawerUnlocked.value) {
-        openPhoto(hasKey.value ? drawerOpenNoKey : drawerOpen)
-        showNumpad.value = false
-      } else {
-        openPhoto(drawer)
-        showInput.value = false
-        codeInput.value = ""
-        // n'affiche le numpad que quand la photo du tiroir est effectivement visible
-        nextTick(() => {
-          if (showPhoto.value && currentImage.value === drawer) {
-            showNumpad.value = true
-          }
-        })
-      }
-      break
-    case 'drawer1':
-      openPhoto(drawer2)
-      break
-    case 'frame':
-      openPhoto(frame)
-      break
-    case 'door':
-      flashMessage("La porte est verrouillée. Il faut une clé.")
-      break
-    case 'closet':
-      flashMessage("Cette armoire est verrouillée.")
-      break
-    case 'door2':
-      goToScene('cuisine')
-      break
+  if (sceneActions && sceneActions[name]) {
+    sceneActions[name]() // exécute la bonne interaction
+  } else {
+    flashMessage("Rien de spécial ici.")
   }
 }
-
 
 // --- VALIDATION DE CODE ---
 async function validateCode() {
