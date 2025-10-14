@@ -3,8 +3,32 @@ export function createInteractions(ctx) {
 
   return {
     med: {
-      
-    
+        drawer1: () => {
+          if (state.isDrawerUnlocked.value) {
+            ui.openPhoto(state.hasKey.value ? photos.drawerOpenNoKey : photos.drawerOpen)
+            ui.setShowNumpad(false)
+          } else {
+            ui.openPhoto(photos.drawer)
+            ui.setShowInput(false)
+            nextTick(() => {
+              // ✅ maintenant showPhoto et currentImage existent
+              if (ctx.showPhoto.value && ctx.currentImage.value === photos.drawer) {
+                ui.setShowNumpad(true)
+              }
+            })
+          }
+        },
+        drawer: () => ui.openPhoto(photos.postithorloge),
+        door: () => ui.flashMessage("Pour ouvrir cette porte, il te faut une clé."),
+        desk: () => {
+            if (state.isComputerUnlocked.value) {
+            ui.openPhoto(photos.macUnlocked)
+            } else {
+            ui.setShowInput(true)
+            ui.openPhoto(photos.macLocked)
+            ui.showCodeBox()
+            }
+        },
     },
 
     cuisine: {

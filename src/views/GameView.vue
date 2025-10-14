@@ -46,12 +46,12 @@
   </form>
 
   <!-- Numpad du tiroir -->
-  <Numpad
-    v-if="showNumpad && currentObject === 'drawer' && showPhoto"
-    :code="codeInput"
-    @press="pressNumber"
-    @clear="clearCode"
-  />
+<Numpad
+  v-if="showNumpad && ['drawer', 'drawer1'].includes(currentObject) && showPhoto"
+  :code="codeInput"
+  @press="pressNumber"
+  @clear="clearCode"
+/>
 
   <!-- Inventaire -->
   <Inventory
@@ -88,7 +88,7 @@ import Numpad from '../components/Numpad.vue'
 import RoomCouloir from '../components/RoomCouloir.vue'
 import RoomCuisine from '../components/RoomCuisine.vue'
 import Med from '../components/Med.vue'
-import { createInteractions } from '@/game/interactions'
+import { createInteractions } from '../game/interactions.js'
 
 // Images
 import backgroundRoom from '../assets/fond_chambre.png'
@@ -103,6 +103,7 @@ import drawerOpenNoKey from '../assets/tiroirOuvertsanscle.png'
 import backgroundCouloir from '../assets/couloir.png'
 import backgroundCuisine from '../assets/cuisine.png'
 import backgroundMed from '../assets/bureau_med.png'
+import postithorloge from '../assets/postithorloge.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -130,7 +131,7 @@ const drawerCode   = "8421"
 const inventory = ref([null, null, null, null])
 
 
-// --- INTERACTIONS ---g
+// --- INTERACTIONS ---
 const interactions = createInteractions({
   photos: {
     drawer,
@@ -140,6 +141,7 @@ const interactions = createInteractions({
     macUnlocked,
     frame,
     drawer2,
+    postithorloge
   },
   state: {
     isDrawerUnlocked,
@@ -152,11 +154,14 @@ const interactions = createInteractions({
     showCodeBox,
     setShowNumpad: v => { showNumpad.value = v },
     setShowInput: v => { showInput.value = v },
+    validateCode,
   },
   nav: {
     goToScene,
   },
   nextTick,
+  showPhoto, 
+  currentImage, 
 })
 
 // --- FONCTIONS GÉNÉRALES ---
@@ -254,9 +259,10 @@ function flashMessage(text, ms = 2500) {
 function inspect(name) {
   const scene = currentScene.value
   const sceneActions = interactions[scene]
+  currentObject = name 
 
   if (sceneActions && sceneActions[name]) {
-    sceneActions[name]() // exécute la bonne interaction
+    sceneActions[name]() 
   } else {
     flashMessage("Rien de spécial ici.")
   }
@@ -277,7 +283,7 @@ async function validateCode() {
     }
   }
 
-  if (currentObject === 'drawer') {
+  if (currentObject === 'drawer1') {
     if (codeInput.value === drawerCode) {
       isDrawerUnlocked.value = true
       openPhoto(drawerOpen)
