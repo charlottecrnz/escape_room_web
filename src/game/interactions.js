@@ -60,7 +60,19 @@ export function createInteractions(ctx) {
         ui.openPhoto(photos.pot)
         state.isPhotoPotOpen.value = true;
       },
-      paper: () => {ui.openPhoto(photos.paper)}
+      paper: () => {ui.openPhoto(photos.paper)},
+      books: () => {
+        if (!state.hasPart1.value) {
+            ui.openPhoto(photos.livres)
+            state.isPhotoBooksOpen.value = true
+          } 
+        else {
+            ui.openPhoto(photos.livres_sans_partie1)
+          }
+      },
+      part1: () => {
+        ui.openPhoto(photos.partie1)
+      }
     },
 
     chambre: {

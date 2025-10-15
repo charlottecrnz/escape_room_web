@@ -72,16 +72,24 @@
   <button
     v-if="isDrawerUnlocked && !hasKey && showPhoto && currentImage === drawerOpen"
     class="hotspot key"
-    @click="pickUpKey"
+    @click="pickUp('key')"
     aria-label="Clé"
   ></button>
 
-  <!-- Hotspot de la clé -->
+  <!-- Hotspot du papier froissé dans le couloir -->
   <button
     v-if="isPhotoPotOpen && showPhoto && currentImage === pot"
     class="hotspot paper"
     @click="inspect('paper')"
     aria-label="Papier"
+  ></button>
+
+  <!-- Hotspot de la partie 1 de la photo -->
+  <button
+    v-if="isPhotoBooksOpen && !hasPart1 && showPhoto && currentImage === livres"
+    class="hotspot part1"
+    @click="pickUp('part1')"
+    aria-label="Partie1"
   ></button>
 
 </template>
@@ -119,6 +127,9 @@ import backgroundCouloir1 from '../assets/couloir_sanscadre.png'
 import gravure from '../assets/gravure.png'
 import pot from '../assets/pot.png'
 import paper from '../assets/papier.png'
+import livres from '../assets/livres.png'
+import partie1 from '../assets/partie1.png'
+import livres_sans_partie1 from '../assets/livres_sans_partie1.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -134,6 +145,8 @@ let currentObject = ""
 let messageTimer = null
 const isFrameFalled = ref(false)
 const isPhotoPotOpen = ref(false)
+const isPhotoBooksOpen = ref(false)
+const hasPart1 = ref(false)
 
 
 // États d’avancement du jeu
@@ -164,6 +177,9 @@ const interactions = createInteractions({
     gravure,
     pot,
     paper,
+    partie1,
+    livres,
+    livres_sans_partie1,
   },
   state: {
     isDrawerUnlocked,
@@ -171,6 +187,8 @@ const interactions = createInteractions({
     hasKey,
     isFrameFalled,
     isPhotoPotOpen,
+    isPhotoBooksOpen,
+    hasPart1,
   },
   ui: {
     openPhoto,
@@ -355,19 +373,37 @@ function clearCode() {
 }
 
 // --- INVENTAIRE ---
-function pickUpKey() {
-  if (!hasKey.value) {
-    const emptyIndex = inventory.value.findIndex(slot => slot === null)
-    if (emptyIndex !== -1) {
-      inventory.value[emptyIndex] = { name: 'key', icon: keyImg }
-      hasKey.value = true
-      flashMessage("Vous avez trouvé une clé !")
+function pickUp(name) {
+  currentObject = name
+  if(name == 'key'){
+      if (!hasKey.value) {
+        const emptyIndex = inventory.value.findIndex(slot => slot === null)
+      if (emptyIndex !== -1) {
+        inventory.value[emptyIndex] = { name: 'key', icon: keyImg }
+        hasKey.value = true
+        flashMessage("Vous avez trouvé une clé !")
 
-      if (showPhoto.value && currentImage.value === drawerOpen) {
-        currentImage.value = drawerOpenNoKey
+        if (showPhoto.value && currentImage.value === drawerOpen) {
+          currentImage.value = drawerOpenNoKey
+        }
       }
     }
   }
+  if(name == 'part1'){
+    if (!hasPart1.value) {
+        const emptyIndex = inventory.value.findIndex(slot => slot === null)
+      if (emptyIndex !== -1) {
+        inventory.value[emptyIndex] = { name: 'part1', icon: partie1 }
+        hasPart1.value = true
+        flashMessage("Vous avez trouvé une clé !")
+
+        if (showPhoto.value && currentImage.value === livres) {
+          currentImage.value = livres_sans_partie1
+        }
+      }
+    }
+  }
+
 }
 
 function useItem(item) {
@@ -612,6 +648,15 @@ function playAudio(src) {
   bottom: 24.7vh;    
   width: 259px;
   height: 289px;
+  z-index: 980;
+}
+
+.hotspot.part1 {
+  position: absolute;
+  left: 38.67%;    
+  bottom: 29vh;    
+  width: 82px;
+  height: 109px;
   z-index: 980;
 }
 </style>
