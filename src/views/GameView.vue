@@ -24,6 +24,14 @@
   :backgroundCuisine="backgroundCuisine"
 />
 
+  <!-- Salon-->
+<RoomSalon
+  v-else-if="currentScene === 'salon'"
+  @inspect="inspect"
+  :backgroundSalon="backgroundSalon"
+/>
+
+
   <!-- Bureau médical-->
 <Med
   v-else-if="currentScene === 'med'"
@@ -106,6 +114,7 @@ import RoomCouloir from '../components/RoomCouloir.vue'
 import RoomCuisine from '../components/RoomCuisine.vue'
 import Med from '../components/Med.vue'
 import { createInteractions } from '../game/interactions.js'
+import RoomSalon from '../components/RoomSalon.vue'
 
 // Images
 import backgroundRoom from '../assets/fond_chambre.png'
@@ -130,6 +139,8 @@ import paper from '../assets/papier.png'
 import livres from '../assets/livres.png'
 import partie1 from '../assets/partie1.png'
 import livres_sans_partie1 from '../assets/livres_sans_partie1.png'
+import backgroundSalon from '../assets/salon.png'
+import backgroundSalonNoir from '../assets/salon_noir.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -147,7 +158,7 @@ const isFrameFalled = ref(false)
 const isPhotoPotOpen = ref(false)
 const isPhotoBooksOpen = ref(false)
 const hasPart1 = ref(false)
-
+const isDoorOpenMed = ref(false)
 
 // États d’avancement du jeu
 const isComputerUnlocked = ref(false)
@@ -189,6 +200,7 @@ const interactions = createInteractions({
     isPhotoPotOpen,
     isPhotoBooksOpen,
     hasPart1,
+    isDoorOpenMed,
   },
   ui: {
     openPhoto,
@@ -395,7 +407,7 @@ function pickUp(name) {
       if (emptyIndex !== -1) {
         inventory.value[emptyIndex] = { name: 'part1', icon: partie1 }
         hasPart1.value = true
-        flashMessage("Vous avez trouvé une clé !")
+        flashMessage("Vous avez trouvé un morceau de photo !")
 
         if (showPhoto.value && currentImage.value === livres) {
           currentImage.value = livres_sans_partie1
@@ -411,6 +423,7 @@ function useItem(item) {
   if (item.name === 'key') {
     if (currentObject === 'door') {
       flashMessage("Vous avez déverrouillé la porte ! 🎉")
+      isDoorOpenMed.value = true
       const index = inventory.value.findIndex(i => i && i.name === 'key')
       if (index !== -1) inventory.value[index] = null
       hasKey.value = false

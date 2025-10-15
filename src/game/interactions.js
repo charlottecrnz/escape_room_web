@@ -18,7 +18,13 @@ export function createInteractions(ctx) {
           }
         },
         drawer: () => ui.openPhoto(photos.postithorloge),
-        door: () => ui.flashMessage("Pour ouvrir cette porte, il te faut une clé."),
+        door: () => {
+          if (!state.isDoorOpenMed.value) {
+            ui.flashMessage("Pour ouvrir cette porte, il te faut une clé.")}
+          else {
+            nav.goToScene('couloir')
+          }
+        },
         desk: () => {
             if (state.isComputerUnlocked.value) {
             ui.openPhoto(photos.macUnlocked)
@@ -44,7 +50,7 @@ export function createInteractions(ctx) {
     },
 
     couloir: {
-      door: () => ui.flashMessage("Tu ne peux pas ouvrir cette porte sans clé."),
+      door: () => nav.goToScene('salon'),
       door2: () => nav.goToScene('cuisine'),
       frame: () => {
         if(!state.isFrameFalled.value){
