@@ -132,6 +132,22 @@ export function createInteractions(ctx) {
           ui.openPhoto(photos.miroirNoir)
         }
       },
+      pillow : () => {ui.openPhoto(photos.telecommande)
+        state.isPhotoTelecommandeOpen.value = true
+      },
+      tv: () => {
+        if (!state.hasTelecommande.value){
+          ui.flashMessage("Il vous manque quelque chose.")
+        }
+        else {
+          if(state.isFrameFalled.value){
+            ui.openPhoto(photos.cameraCadreTombe)
+          }
+          else {
+            ui.openPhoto(photos.camera)
+          }
+        }
+      }
 
     }
   }

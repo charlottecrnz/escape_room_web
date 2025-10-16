@@ -100,6 +100,14 @@
     aria-label="Partie1"
   ></button>
 
+  <!-- Hotspot pour récupérer la télécommande -->
+  <button
+    v-if="isPhotoTelecommandeOpen && showPhoto && currentImage === telecommande"
+    class="hotspot recupTelecommande"
+    @click="pickUp('telecommande')"
+    aria-label="Telecommande"
+  ></button>
+
 </template>
 
 <script setup>
@@ -143,6 +151,11 @@ import backgroundSalon from '../assets/salon.png'
 import backgroundSalonNoir from '../assets/salon_noir.png'
 import miroir from '../assets/miroir.png'
 import miroirNoir from '../assets/miroir_noir.png'
+import telecommande from '../assets/telecommande.png'
+import telecommandeRemove from '../assets/telecommandeRemove.png'
+import sansTelecommande from '../assets/sanstelecommande.png'
+import camera from '../assets/camera.png'
+import cameraCadreTombe from '../assets/camera_cadretombe.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -162,11 +175,13 @@ const isPhotoBooksOpen = ref(false)
 const hasPart1 = ref(false)
 const isDoorOpenMed = ref(false)
 const isLightOn = ref(true)
+const isPhotoTelecommandeOpen = ref(false)
 
 // États d’avancement du jeu
 const isComputerUnlocked = ref(false)
 const isDrawerUnlocked = ref(false)
 const hasKey = ref(false)
+const hasTelecommande = ref(false)
 
 // Codes
 const computerCode = "1010"
@@ -196,6 +211,9 @@ const interactions = createInteractions({
     livres_sans_partie1,
     miroir,
     miroirNoir,
+    telecommande,
+    camera,
+    cameraCadreTombe,
   },
   state: {
     isDrawerUnlocked,
@@ -207,6 +225,8 @@ const interactions = createInteractions({
     hasPart1,
     isDoorOpenMed,
     isLightOn,
+    hasTelecommande,
+    isPhotoTelecommandeOpen
   },
   ui: {
     openPhoto,
@@ -421,6 +441,20 @@ function pickUp(name) {
       }
     }
   }
+    if(name == 'telecommande'){
+    if (!hasTelecommande.value) {
+        const emptyIndex = inventory.value.findIndex(slot => slot === null)
+      if (emptyIndex !== -1) {
+        inventory.value[emptyIndex] = { name: 'telecommande', icon: telecommandeRemove }
+        hasTelecommande.value = true
+        flashMessage("Vous avez trouvé la télécommande !")
+
+        if (showPhoto.value && currentImage.value === telecommande) { 
+          currentImage.value = sansTelecommande 
+        }
+      }
+    }
+  }
 
 }
 
@@ -434,6 +468,21 @@ function useItem(item) {
       if (index !== -1) inventory.value[index] = null
       hasKey.value = false
       goToScene('couloir');
+    } else {
+      flashMessage("Il faut cliquer sur la porte pour utiliser la clé.")
+    }
+  }
+    if (item.name === 'telecommande') {
+    if (currentObject === 'tv') {
+        if (isFrameFalled){
+          openPhoto(camera)
+        }
+        else{
+          openPhoto(camera_cadretombe)
+        }
+      const index = inventory.value.findIndex(i => i && i.name === 'telecommande')
+      if (index !== -1) inventory.value[index] = null
+      hasTelecommande.value = false
     } else {
       flashMessage("Il faut cliquer sur la porte pour utiliser la clé.")
     }
@@ -676,6 +725,15 @@ function playAudio(src) {
   bottom: 29vh;    
   width: 82px;
   height: 109px;
+  z-index: 980;
+}
+
+.hotspot.recupTelecommande {
+  position: absolute;
+  left: 40.6%;    
+  bottom: 15vh;    
+  width: 340px;
+  height: 450px;
   z-index: 980;
 }
 </style>

@@ -3,6 +3,9 @@
     <button class="hotspot door" @click="$emit('inspect', 'door')" aria-label="Porte"></button>
     <button class="hotspot interrupteur" @click="$emit('inspect', 'interrupteur')" aria-label="Interrupteur"></button>
     <button class="hotspot miroir" @click="$emit('inspect', 'miroir')" aria-label="Miroir"></button>
+    <button class="hotspot pillow" @click="$emit('inspect', 'pillow')" aria-label="Coussin"></button>
+    <button class="hotspot pillow1" @click="$emit('inspect', 'pillow1')" aria-label="Coussin1"></button>
+    <button class="hotspot tv" @click="$emit('inspect', 'tv')" aria-label="Television"></button>
 
 
   </div>
@@ -68,33 +71,31 @@ defineProps({
   transform: translateX(-50%);
 }
 
-/* Tiroir haut gauche */
-.hotspot.drawer {
-  left: 62%;
-  bottom: 29vh;
-  width: clamp(52px, 14vw, 45px);
-  height: clamp(38px, 7vh, 20px);
+/* Coussin */
+.hotspot.pillow {
+  left: 33.6%;
+  bottom: 39vh;
+  width: clamp(103px, 14vw, 45px);
+  height: clamp(85px, 7vh, 20px);
   transform: translateX(-50%);
-  transform: rotateZ(50deg)
-}
-/* Tiroir haut droit */
-.hotspot.drawer1 {
-  left: 65%;
-  bottom: 21vh;
-  width: clamp(60px, 14vw, 45px);
-  height: clamp(30px, 7vh, 100px);
-  transform: translateX(-50%);
-  transform: rotateZ(50deg)
 }
 
-/* Tiroir milieu */ 
-.hotspot.drawer2 {
-  left: 63.5%;
-  bottom: 9vh;
-  width: clamp(50px, 14vw, 50px);
-  height: clamp(130px, 7vh, 100px);
+/* Coussin */
+.hotspot.pillow1 {
+  left: 19.7%;
+  bottom: 31.5vh;
+  width: clamp(152px, 14vw, 45px);
+  height: clamp(115px, 7vh, 20px);
   transform: translateX(-50%);
-  transform: rotateZ(140deg);
+}
+
+/* Télévision */ 
+.hotspot.tv {
+  left: 76.7%;
+  bottom: 42vh;
+  width: clamp(220px, 14vw, 50px);
+  height: clamp(170px, 7vh, 100px);
+  transform: translateX(-50%);
 }
 
 /* Tiroir bas */
