@@ -1,5 +1,5 @@
 export function createInteractions(ctx) {
-  const { photos, state, ui, nav, nextTick } = ctx
+  const { photos, state, ui, nav, nextTick, audio } = ctx
 
   return {
     med: {
@@ -37,7 +37,11 @@ export function createInteractions(ctx) {
         files: () => ui.openPhoto(photos.dossiers),
         dictaphone: () => {
           ui.flashMessage("Lecture du rapport du médecin…")
-          ctx.audio.playAudio(dictaphone1)
+          if (!audio.currentlyPlaying) {
+            audio.playAudio(audio.dictaphone1)
+            audio.currentlyPlaying = true
+            setTimeout(() => (audio.currentlyPlaying = false), 5000) // durée approximative de ton mp3
+          }
         },
     },
 
@@ -109,6 +113,25 @@ export function createInteractions(ctx) {
       frame: () => ui.openPhoto(photos.frame),
       door: () => ui.flashMessage("La porte est verrouillée. Il faut une clé."),
       closet: () => ui.openPhoto(photos.closet),
+
+    },
+    salon: {
+      interrupteur: () => {
+        if (state.isLightOn.value){
+          state.isLightOn.value = false
+        }
+        else {
+          state.isLightOn.value = true
+        }
+      },
+      miroir: () => {
+        if (state.isLightOn.value){
+          ui.openPhoto(photos.miroir)
+        }
+        else {
+          ui.openPhoto(photos.miroirNoir)
+        }
+      },
 
     }
   }

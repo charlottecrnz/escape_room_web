@@ -28,7 +28,7 @@
 <RoomSalon
   v-else-if="currentScene === 'salon'"
   @inspect="inspect"
-  :backgroundSalon="backgroundSalon"
+  :backgroundSalon="isLightOn ? backgroundSalon : backgroundSalonNoir"
 />
 
 
@@ -141,6 +141,8 @@ import partie1 from '../assets/partie1.png'
 import livres_sans_partie1 from '../assets/livres_sans_partie1.png'
 import backgroundSalon from '../assets/salon.png'
 import backgroundSalonNoir from '../assets/salon_noir.png'
+import miroir from '../assets/miroir.png'
+import miroirNoir from '../assets/miroir_noir.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -159,6 +161,7 @@ const isPhotoPotOpen = ref(false)
 const isPhotoBooksOpen = ref(false)
 const hasPart1 = ref(false)
 const isDoorOpenMed = ref(false)
+const isLightOn = ref(true)
 
 // États d’avancement du jeu
 const isComputerUnlocked = ref(false)
@@ -191,6 +194,8 @@ const interactions = createInteractions({
     partie1,
     livres,
     livres_sans_partie1,
+    miroir,
+    miroirNoir,
   },
   state: {
     isDrawerUnlocked,
@@ -201,6 +206,7 @@ const interactions = createInteractions({
     isPhotoBooksOpen,
     hasPart1,
     isDoorOpenMed,
+    isLightOn,
   },
   ui: {
     openPhoto,
