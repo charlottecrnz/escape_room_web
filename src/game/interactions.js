@@ -4,6 +4,7 @@ export function createInteractions(ctx) {
   return {
     med: {
         drawer1: () => {
+          ctx.currentObject = 'drawer1'
           if (state.isDrawerUnlocked.value) {
             ui.openPhoto(state.hasKey.value ? photos.drawerOpenNoKey : photos.drawerOpen)
             ui.setShowNumpad(false)
@@ -55,6 +56,7 @@ export function createInteractions(ctx) {
 
     couloir: {
       door: () => nav.goToScene('salon'),
+      door1: () => nav.goToScene('chambre'),
       door2: () => nav.goToScene('cuisine'),
       frame: () => {
         if(!state.isFrameFalled.value){
@@ -86,7 +88,7 @@ export function createInteractions(ctx) {
     },
 
     chambre: {
-        desk: () => {
+        /*desk: () => {
         if (state.isComputerUnlocked.value) {
           ui.openPhoto(photos.macUnlocked)
         } else {
@@ -94,26 +96,49 @@ export function createInteractions(ctx) {
           ui.openPhoto(photos.macLocked)
           ui.showCodeBox()
         }
-      },
+      },*/
       
-      drawer: () => {
-        if (state.isDrawerUnlocked.value) {
-          ui.openPhoto(state.hasKey.value ? photos.drawerOpenNoKey : photos.drawerOpen)
-          ui.setShowNumpad(false)
-        } else {
-          ui.openPhoto(photos.drawer)
-          ui.setShowInput(false)
-          nextTick(() => {
-            ui.setShowNumpad(true)
-          })
-        }
-      },
+      /*drawer: () => {},*/
 
       drawer1: () => ui.openPhoto(photos.drawer2),
       frame: () => ui.openPhoto(photos.frame),
       door: () => ui.flashMessage("La porte est verrouillée. Il faut une clé."),
-      closet: () => ui.openPhoto(photos.closet),
+      closet: () => {
+        ui.openPhoto(photos.closet),
+        state.isPhotoClosetOpen.value = true
+      },
 
+      coffre: () => {
+        ctx.currentObject = 'coffre'
+        if (state.isCoffreOpen.value) {
+            ui.openPhoto(state.hasKey1.value ? photos.coffreOuvertCle : photos.coffreOuvert)
+            ui.setShowNumpad(false)
+          } else {
+            ui.openPhoto(photos.coffre)
+            ui.setShowInput(false)
+            nextTick(() => {
+              if (ctx.showPhoto.value && ctx.currentImage.value === photos.coffre) {
+                ui.setShowNumpad(true)
+              }
+            })
+          }
+        },/*
+        if (state.isCoffreOpen.value){
+          ui.openPhoto(photos.coffreOuvertCle)
+        }
+        else {
+          ui.openPhoto(photos.coffre)
+        }
+      },*/
+      drawer2: () => {
+        if (state.hasPart3.value){
+          ui.openPhoto(photos.tiroirChevet)
+        }
+        else {
+          ui.openPhoto(photos.tiroirChevetPhoto)
+          state.isTiroirOpen.value = true
+        }
+      }
     },
     salon: {
       interrupteur: () => {

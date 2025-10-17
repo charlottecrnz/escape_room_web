@@ -62,6 +62,14 @@
   @clear="clearCode"
 />
 
+  <!-- Numpad du coffre -->
+<Numpad1
+  v-if="showNumpad && ['coffre'].includes(currentObject) && showPhoto"
+  :code="codeInput"
+  @press="pressNumber"
+  @clear="clearCode"
+/>
+
   <!-- Inventaire -->
   <Inventory
     v-if="!startScreen"
@@ -99,6 +107,14 @@
     @click="pickUp('part1')"
     aria-label="Partie1"
   ></button>
+  
+  <!-- Hotspot de la partie 3 de la photo -->
+  <button
+    v-if=" isTiroirOpen && !hasPart3 && showPhoto && currentImage === tiroirChevetPhoto"
+    class="hotspot part3"
+    @click="pickUp('part3')"
+    aria-label="Partie3"
+  ></button>
 
   <!-- Hotspot pour récupérer la télécommande -->
   <button
@@ -106,6 +122,14 @@
     class="hotspot recupTelecommande"
     @click="pickUp('telecommande')"
     aria-label="Telecommande"
+  ></button>
+
+  <!-- Hotspot pour le coffre dans l'armoire-->
+  <button
+    v-if=" isPhotoClosetOpen && showPhoto && currentImage === closet"
+    class="hotspot coffre"
+    @click="inspect('coffre')"
+    aria-label="Coffre"
   ></button>
 
 </template>
@@ -123,9 +147,10 @@ import RoomCuisine from '../components/RoomCuisine.vue'
 import Med from '../components/Med.vue'
 import { createInteractions } from '../game/interactions.js'
 import RoomSalon from '../components/RoomSalon.vue'
+import Numpad1 from '../components/Numpad1.vue'
 
 // Images
-import backgroundRoom from '../assets/fond_chambre.png'
+import backgroundRoom from '../assets/chambre.png'
 import frame from '../assets/photo.png'
 import drawer2 from '../assets/tiroir1.png'
 import drawer from '../assets/tiroir.png'
@@ -146,6 +171,9 @@ import pot from '../assets/pot.png'
 import paper from '../assets/papier.png'
 import livres from '../assets/livres.png'
 import partie1 from '../assets/partie1.png'
+import partie2 from '../assets/partie2.png'
+import partie3 from '../assets/partie3.png'
+import partie4 from '../assets/partie4.png'
 import livres_sans_partie1 from '../assets/livres_sans_partie1.png'
 import backgroundSalon from '../assets/salon.png'
 import backgroundSalonNoir from '../assets/salon_noir.png'
@@ -156,6 +184,12 @@ import telecommandeRemove from '../assets/telecommandeRemove.png'
 import sansTelecommande from '../assets/sanstelecommande.png'
 import camera from '../assets/camera.png'
 import cameraCadreTombe from '../assets/camera_cadretombe.png'
+import closet from '../assets/armoire.png'
+import coffre from '../assets/CoffreFerme.png'
+import coffreOuvert from '../assets/CoffreOuvert.png'
+import coffreOuvertCle from '../assets/coffreOuvertCle.png'
+import tiroirChevet from '../assets/tiroirChevet.png'
+import tiroirChevetPhoto from '../assets/tiroirChevetPhoto.png'
 
 // --- ÉTATS PRINCIPAUX ---
 const startScreen = ref(true)
@@ -176,6 +210,14 @@ const hasPart1 = ref(false)
 const isDoorOpenMed = ref(false)
 const isLightOn = ref(true)
 const isPhotoTelecommandeOpen = ref(false)
+const isPhotoClosetOpen = ref(false)
+const isCoffreOpen = ref(false)
+const isPhotoCoffreOpen = ref(false)
+const hasPart3 = ref(false)
+const isTiroirOpen = ref(false)
+const hasKey1 = ref(false)
+const isCoffreUnlocked = ref(false)
+
 
 // États d’avancement du jeu
 const isComputerUnlocked = ref(false)
@@ -186,6 +228,7 @@ const hasTelecommande = ref(false)
 // Codes
 const computerCode = "1010"
 const drawerCode   = "8421"
+const coffreCode = "7532"
 
 // --- INVENTAIRE ---
 const inventory = ref([null, null, null, null])
@@ -214,6 +257,12 @@ const interactions = createInteractions({
     telecommande,
     camera,
     cameraCadreTombe,
+    closet,
+    coffre,
+    coffreOuvertCle,
+    coffreOuvert,
+    tiroirChevetPhoto,
+    tiroirChevet
   },
   state: {
     isDrawerUnlocked,
@@ -226,7 +275,12 @@ const interactions = createInteractions({
     isDoorOpenMed,
     isLightOn,
     hasTelecommande,
-    isPhotoTelecommandeOpen
+    isPhotoTelecommandeOpen,
+    isPhotoClosetOpen,
+    isCoffreOpen,
+    hasPart3,
+    isTiroirOpen,
+    hasKey1,
   },
   ui: {
     openPhoto,
@@ -243,7 +297,12 @@ const interactions = createInteractions({
   showPhoto, 
   currentImage,
   audio: { playAudio, dictaphone1},
+  currentObject: null, 
+
 })
+
+interactions.currentObject = currentObject
+
 
 // --- FONCTIONS GÉNÉRALES ---
 /** Pile des scènes visitées : on push pour avancer, on pop pour Retour */
@@ -320,6 +379,8 @@ function closePhoto() {
 
   showMessage.value = false
   showNumpad.value = false
+
+  currentObject = ""
 }
 
 function onKeydown(e) {
@@ -380,6 +441,20 @@ async function validateCode() {
     }
   }
 
+    if (currentObject === 'coffre') {
+    if (codeInput.value === coffreCode) {
+      isCoffreUnlocked.value = true
+      openPhoto(coffreOuvert)
+      showInput.value = false
+      showNumpad.value = false
+    } else {
+      flashMessage("Code incorrect", 1500)
+      showInput.value = false
+      await nextTick()
+      codeField.value?.focus()
+    }
+  }
+
   if (!showPhoto.value) {
     showNumpad.value = false
   }
@@ -395,6 +470,7 @@ async function showCodeBox() {
 
 // --- NUMPAD ---
 async function pressNumber(num) {
+  console.log("currentObject:", currentObject)
   if (codeInput.value.length < 4) {
     codeInput.value += String(num)
   }
@@ -437,6 +513,20 @@ function pickUp(name) {
 
         if (showPhoto.value && currentImage.value === livres) {
           currentImage.value = livres_sans_partie1
+        }
+      }
+    }
+  }
+    if(name == 'part3'){
+    if (!hasPart3.value) {
+        const emptyIndex = inventory.value.findIndex(slot => slot === null)
+      if (emptyIndex !== -1) {
+        inventory.value[emptyIndex] = { name: 'part3', icon: partie3 }
+        hasPart3.value = true
+        flashMessage("Vous avez trouvé un morceau de photo !")
+
+        if (showPhoto.value && currentImage.value === tiroirChevetPhoto) {
+          currentImage.value = tiroirChevet
         }
       }
     }
@@ -728,12 +818,30 @@ function playAudio(src) {
   z-index: 980;
 }
 
+.hotspot.part3 {
+  position: absolute;
+  left: 42.5%;    
+  bottom: 57vh;    
+  width: 82px;
+  height: 90px;
+  z-index: 980;
+}
+
 .hotspot.recupTelecommande {
   position: absolute;
   left: 40.6%;    
   bottom: 15vh;    
   width: 340px;
   height: 450px;
+  z-index: 980;
+}
+
+.hotspot.coffre {
+  position: absolute;
+  left: 44.4%;    
+  bottom: 33vh;    
+  width: 92px;
+  height: 70px;
   z-index: 980;
 }
 </style>

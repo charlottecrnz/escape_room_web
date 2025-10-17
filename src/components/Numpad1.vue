@@ -4,7 +4,6 @@
 
     <button v-for="n in 9" :key="n" class="numpad-btn" :class="'btn' + n" @click="$emit('press', n)"></button>
     <button class="numpad-btn btn0" @click="$emit('press', 0)"></button>
-    <button class="numpad-btn btnClear" @click="$emit('clear')"></button>
   </div>
 </template>
 
@@ -25,20 +24,21 @@ defineProps({
 
 .numpad-display {
   position: absolute;
-  top: -40px;
-  left: 50px;
+  top: -26px;
+  left: 65px;
   transform: translateX(-50%);
   width: 120px;
-  height: 20px;
+  height: 15px;
   background: rgba(70,70,70,0.85);
   color: white;
   border-radius: 6px;
   text-align: center;
-  line-height: 23px;
+  line-height: 18px;
   font-family: 'Courier New', monospace;
   letter-spacing: 2px;
-  font-size: 16px;
+  font-size: 13px;
   z-index: 10000;
+  transform: rotateZ(-2deg);
 }
 
 
@@ -48,13 +48,13 @@ defineProps({
   padding: 0 !important;
   margin: 0 !important;
 
-  background: transparent !important;
+  background: transparent /*!important*/;
   border: none !important;
   box-shadow: none !important;
   color: transparent;
   font-size: 0;
 
-  width: 25px !important;
+  width: 26px !important;
   min-width: 0 !important;
   -webkit-appearance: none;
   appearance: none;
@@ -65,19 +65,19 @@ defineProps({
 }
 
 
-.btn1 { left: 7px;   top: 7px; }
-.btn2 { left: 41px;  top: 7px; }
-.btn3 { left: 74px;  top: 7px; }
+.btn1 { left: 75px;   top: -3px; }
+.btn2 { left: 113px;  top: -4px; }
+.btn3 { left: 150px;  top: -6px; }
 
-.btn4 { left: 7px;   top: 42px; }
-.btn5 { left: 41px;  top: 42px; }
-.btn6 { left: 74px;  top: 42px; }
+.btn4 { left: 75px;   top: 32px; }
+.btn5 { left: 113px;  top: 31px; }
+.btn6 { left: 150px;  top: 29px; }
 
-.btn7 { left: 7px;   top: 74px; }
-.btn8 { left: 41px;  top: 74px; }
-.btn9 { left: 74px;  top: 74px; }
+.btn7 { left: 75px;   top: 69px; }
+.btn8 { left: 113px;  top: 68px; }
+.btn9 { left: 150px;  top: 66px; }
 
-.btn0     { left: 41px;  top: 107px; }
-.btnClear { left: 7px;   top: 107px; }
+.btn0     { left: 111px;  top: 104px; }
+
 
 </style>
