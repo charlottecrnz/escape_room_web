@@ -216,7 +216,7 @@ const isPhotoCoffreOpen = ref(false)
 const hasPart3 = ref(false)
 const isTiroirOpen = ref(false)
 const hasKey1 = ref(false)
-const isCoffreUnlocked = ref(false)
+
 
 
 // États d’avancement du jeu
@@ -443,7 +443,7 @@ async function validateCode() {
 
     if (currentObject === 'coffre') {
     if (codeInput.value === coffreCode) {
-      isCoffreUnlocked.value = true
+      isCoffreOpen.value = true
       openPhoto(coffreOuvert)
       showInput.value = false
       showNumpad.value = false
